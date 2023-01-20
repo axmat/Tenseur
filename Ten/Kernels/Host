@@ -1,0 +1,7 @@
+#ifndef TEN_KERNELS_HOST
+#define TEN_KERNELS_HOST
+
+#include <Ten/Kernels/BlasAPI.hxx>
+#include <Ten/Kernels/Mul.hxx>
+
+#endif
