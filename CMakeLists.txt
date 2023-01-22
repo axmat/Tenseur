@@ -60,7 +60,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
 # Install directory
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/Ten DESTINATION include)
 
-# Build the tests
+# Build the examples
 option(TENSEUR_EXAMPLES "Build examples." OFF)
 if (TENSEUR_EXAMPLES)
   add_subdirectory(examples)

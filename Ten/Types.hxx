@@ -61,15 +61,20 @@ template <class T> class Scalar;
 template <class> struct isScalar : std::false_type {};
 template <class T> struct isScalar<Scalar<T>> : std::true_type {};
 
-// Forward declaration of tensor type
-template <typename Scalar, typename Shape, StorageOrder order, typename Storage,
-          typename Allocator>
-class Tensor;
-
 // Forward declaration of tensor operations
 template <class T, class Shape, StorageOrder Order, class Storage,
           class Allocator>
 struct TensorOperations;
+
+// Forward declaration of tensor node
+template <class T, class Shape, StorageOrder Order, class Storage,
+          class Allocator>
+struct TensorNode;
+
+// Forward declaration of tensor type
+template <typename Scalar, typename Shape, StorageOrder order, typename Storage,
+          typename Allocator>
+class Tensor;
 
 /*template<typename T>
 using isTensor = std::is_same<T,
@@ -134,6 +139,41 @@ struct isDenseTensor<Tensor<Scalar, Shape, order, Storage, Allocator>> {
    static constexpr bool value = isDenseStorage<Storage>::value;
 };
 
+// Vector node
+template <class> struct isVectorNode : std::false_type {};
+template <typename Scalar, typename Shape, StorageOrder order, typename Storage,
+          typename Allocator>
+struct isVectorNode<TensorNode<Scalar, Shape, order, Storage, Allocator>> {
+   static constexpr bool value = Shape::rank() == 1;
+};
+
+template<class T>
+concept VectorNode = isVectorNode<T>::value;
+
+// Matrix node
+template <class> struct isMatrixNode : std::false_type {};
+template <typename Scalar, typename Shape, StorageOrder order, typename Storage,
+          typename Allocator>
+struct isMatrixNode<TensorNode<Scalar, Shape, order, Storage, Allocator>> {
+   static constexpr bool value = Shape::rank() == 2;
+};
+
+template<class T>
+concept MatrixNode = isMatrixNode<T>::value;
+
+// Concepts
+template<class A, class B>
+concept SameShape = std::is_same_v<typename A::shape_type, typename B::shape_type>;
+
+template<class A, class B>
+concept SameStorageOrder = A::storageOrder() == B::storageOrder();
+
+template<class A, class B>
+concept SameStorage = std::is_same_v<typename A::storage_type, typename B::storage_type>;
+
+template<class A, class B>
+concept SameAllocator = std::is_same_v<typename A::allocator_type, typename B::allocator_type>;
+
 ////////////////////////////////////////////////////////////////////////////////
 // Node types
 // template<class> struct Node;
@@ -144,11 +184,6 @@ template <class T> class ScalarNode;
 // ScalarNode traits
 template <class> struct isScalarNode : std::false_type {};
 template <class T> struct isScalarNode<ScalarNode<T>> : std::true_type {};
-
-// Tensor Node
-template <class T, class Shape, StorageOrder Order, class Allocator,
-          class Storage>
-class TensorNode;
 
 // TensorNode traits
 template <class> struct isTensorNode : std::false_type {};

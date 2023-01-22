@@ -142,6 +142,21 @@ int main() {
    }
 
    {
+      cout << "Binary expr a * b" << std::endl;
+      DynamicTensor<float, 1> a({6});
+      DynamicTensor<float, 1> b({6});
+      for (size_t i = 0; i < 6; i++) {
+         a[i] = i;
+         b[i] = i;
+      }
+      auto c = (a * b).eval();
+      printTensor(c);
+      static_assert(std::is_same_v<decltype(c), DynamicTensor<float, 1>>);
+   }
+
+
+
+   {
       cout << "Binary expr A * B" << std::endl;
       DynamicTensor<float, 2> a({2, 3});
       DynamicTensor<float, 2> b({3, 4});
