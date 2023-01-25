@@ -56,7 +56,7 @@ auto operator+(T &&scalar, E &&expr) {
 
 template <typename E, typename T>
    requires ::ten::isExpr<std::remove_cvref_t<E>>
-auto operator+(E&& expr, T &&scalar) {
+auto operator+(E &&expr, T &&scalar) {
    using R = std::remove_cvref_t<E>;
    return std::forward<R>(expr) + Scalar<T>(scalar);
 }
@@ -81,7 +81,7 @@ auto operator-(T &&scalar, E &&expr) {
 
 template <typename E, typename T>
    requires ::ten::isExpr<std::remove_cvref_t<E>>
-auto operator-(E&& expr, T &&scalar) {
+auto operator-(E &&expr, T &&scalar) {
    using R = std::remove_cvref_t<E>;
    return std::forward<R>(expr) - Scalar<T>(scalar);
 }
@@ -106,7 +106,7 @@ auto operator*(T &&scalar, E &&expr) {
 
 template <typename E, typename T>
    requires ::ten::isExpr<std::remove_cvref_t<E>>
-auto operator*(E&& expr, T &&scalar) {
+auto operator*(E &&expr, T &&scalar) {
    using R = std::remove_cvref_t<E>;
    return std::forward<R>(expr) * Scalar<T>(scalar);
 }
@@ -131,7 +131,7 @@ auto operator/(T &&scalar, E &&expr) {
 
 template <typename E, typename T>
    requires ::ten::isExpr<std::remove_cvref_t<E>>
-auto operator/(E&& expr, T &&scalar) {
+auto operator/(E &&expr, T &&scalar) {
    using R = std::remove_cvref_t<E>;
    return std::forward<R>(expr) / Scalar<T>(scalar);
 }
@@ -563,7 +563,8 @@ template <class E>
    requires isExpr<std::remove_cvref_t<E>>
 auto min(E &&expr) {
    using expr_type = std::remove_cvref_t<E>;
-   return UnaryExpr<expr_type, functional::Min>(std::forward<E>(expr));
+   return UnaryExpr<typename expr_type::node_type, functional::Min>(
+       expr.node());
 }
 
 /// \fn max
@@ -572,7 +573,8 @@ template <class E>
    requires isExpr<std::remove_cvref_t<E>>
 auto max(E &&expr) {
    using expr_type = std::remove_cvref_t<E>;
-   return UnaryExpr<expr_type, functional::Max>(std::forward<E>(expr));
+   return UnaryExpr<typename expr_type::node_type, functional::Max>(
+       expr.node());
 }
 
 /// \fn abs
@@ -581,7 +583,8 @@ template <class E>
    requires isExpr<std::remove_cvref_t<E>>
 auto abs(E &&expr) {
    using expr_type = std::remove_cvref_t<E>;
-   return UnaryExpr<expr_type, functional::Abs>(std::forward<E>(expr));
+   return UnaryExpr<typename expr_type::node_type, functional::Abs>(
+       expr.node());
 }
 
 /// \fn sqrt
@@ -590,7 +593,8 @@ template <class E>
    requires isExpr<std::remove_cvref_t<E>>
 auto sqrt(E &&expr) {
    using expr_type = std::remove_cvref_t<E>;
-   return UnaryExpr<expr_type, functional::Sqrt>(std::forward<E>(expr));
+   return UnaryExpr<typename expr_type::node_type, functional::Sqrt>(
+       expr.node());
 }
 
 } // namespace ten

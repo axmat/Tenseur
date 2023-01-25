@@ -44,6 +44,19 @@ struct NodeWrapper<TensorNode<T, Shape, Order, Storage, Allocator>> {
    }
 };
 
+template <class Input, class Output, template <typename...> class F,
+          typename... Args>
+struct NodeWrapper<UnaryNode<Input, Output, F, Args...>> {
+   static auto
+   shape(const std::shared_ptr<UnaryNode<Input, Output, F, Args...>> &node) {
+      return node.get()->node().get()->shape();
+   }
+   static auto
+   ptr(const std::shared_ptr<UnaryNode<Input, Output, F, Args...>> &node) {
+      return node.get()->node().get();
+   }
+};
+
 template <class L, class R, class O, template <typename...> class F,
           typename... Args>
 struct NodeWrapper<BinaryNode<L, R, O, F, Args...>> {
@@ -72,6 +85,13 @@ struct OutputNodeType<TensorNode<T, Shape, Order, Storage, Allocator>> {
    using type = TensorNode<T, Shape, Order, Storage, Allocator>;
 };
 
+template <class Input, class Output, template <typename...> class F,
+          class... Args>
+struct OutputNodeType<::ten::UnaryNode<Input, Output, F, Args...>> {
+   using type =
+       typename ::ten::UnaryNode<Input, Output, F, Args...>::output_node_type;
+};
+
 template <class L, class R, class Output, template <typename...> class F,
           class... Args>
 struct OutputNodeType<::ten::BinaryNode<L, R, Output, F, Args...>> {
@@ -80,104 +100,94 @@ struct OutputNodeType<::ten::BinaryNode<L, R, Output, F, Args...>> {
 };
 } // namespace details
 
-// TODO Remove this, Value type of an expression
-template <class E, template <typename...> class Func, class... Args>
-struct InputNode;
-
-template <class T, class Shape, StorageOrder Order, class Storage,
-          class Allocator, template <typename...> class Func, class... Args>
-struct InputNode<Tensor<T, Shape, Order, Storage, Allocator>, Func, Args...> {
-   using type = TensorNode<T, Shape, Order, Storage, Allocator>;
-};
-
-template <class T, template <typename...> class Func, class... Args>
-struct InputNode<Scalar<T>, Func, Args...> {
-   using type = ScalarNode<T>;
-};
-
-template <class L, class R, template <typename...> class G, class... GArgs,
-          template <typename...> class Func, class... Args>
-struct InputNode<::ten::BinaryExpr<L, R, G, GArgs...>, Func, Args...> {
-   using type = typename ::ten::BinaryExpr<L, R, G, GArgs...>::output_node_type;
-};
-
-template <class L, class R, class Output, template <typename...> class G,
-          class... GArgs, template <typename...> class Func, class... Args>
-struct InputNode<::ten::BinaryNode<L, R, Output, G, GArgs...>, Func, Args...> {
-   using type =
-       typename ::ten::BinaryNode<L, R, Output, G, GArgs...>::output_node_type;
-};
-
 // \class UnaryNode
 // Apply a function to a ten::Tensor or a ten::Scalar
 template <class Input, class Output, template <typename...> class Func,
           typename... Args>
 class UnaryNode {
  public:
-   using func_type = Func<Input, Output, Args...>;
+   using input_node_type = details::OutputNodeType<Input>::type;
+   using output_node_type = Output;
+   using func_type = Func<input_node_type, Output, Args...>;
+
+   /// \typedef evaluated_type
+   /// Type of the evaluated expression
+   using evaluated_type = std::conditional_t<isScalarNode<Output>::value,
+                                             typename Output::scalar_type,
+                                             typename Output::tensor_type>;
 
  private:
    /// Optional function type
-   std::optional<func_type> _func;
+   std::optional<func_type> _func = std::nullopt;
    //// Output value
    std::shared_ptr<Output> _value = nullptr;
+   std::shared_ptr<Input> _input = nullptr;
 
  public:
+   UnaryNode() {}
+
    /// Construct a unary node if the function doesn't take additional parameters
-   UnaryNode() noexcept
+   UnaryNode(const std::shared_ptr<Input> &input) noexcept
       requires(!func_type::isParametric())
-   {}
+       : _input(input) {}
 
    /// Construct a unary node if the function take additional parameters.
    /// The parameters of the functions args of type FuncArgs are forwarded
    /// to the constructor of the function when necessary.
    template <typename... FuncArgs>
-   UnaryNode(FuncArgs... args) noexcept
+   UnaryNode(const std::shared_ptr<Input> &input, FuncArgs... args) noexcept
       requires(func_type::isParametric())
-       : _func(func_type(std::forward<FuncArgs>(args)...)) {}
+       : _input(input), _func(func_type(std::forward<FuncArgs>(args)...)) {}
 
    /// Returns whether the functions has parameters
    constexpr inline bool isParametric() { return func_type::isParametric(); }
 
-   /// Returns whether a function object has been initialized and stored
-   /// in the node.
-   inline bool hasFunc() const { return _func.has_value(); }
-
    const func_type &func() { return _func.value(); }
 
-   [[nodiscard]] inline std::shared_ptr<Output> value() { return _value; }
+   [[nodiscard]] inline std::shared_ptr<Output> node() { return _value; }
 
-   /// Evaluated the expression for a parametrized function
-   template <class T>
-   void callFunc(T &&input) noexcept
-      requires(func_type::isParametric())
-   {
-      if constexpr (Output::isStatic()) {
-         _value = std::make_shared<Output>();
-      } else {
-         _value = std::make_shared<Output>(input.shape());
-      }
-      _func.value().call(std::forward<T>(input), *_value.get());
+   /// Returns whether the expression is evaluated
+   [[nodiscard]] bool evaluated() const { return _value.get(); }
+
+   /// Returns the evaluated expression of type ten::Scalar or ten::Tensor
+   [[nodiscard]] auto value() -> evaluated_type {
+      return evaluated_type(_value);
    }
 
-   /// Evaluate the expression for a non parametric function
-   /// T is a ten::TensorNode or ten::ScalarNode
-   /// args are the parameters of the function.
-   template <class T>
-   void callFunc(T &&input) noexcept
-      requires(!func_type::isParametric())
-   {
-      // scalar
-      if constexpr (isScalarNode<Output>::value) {
-         _value = std::make_shared<Output>();
-      } else { // tensor
-         if constexpr (Output::isStatic()) {
-            _value = std::make_shared<Output>();
-         } else {
-            _value = std::make_shared<Output>(input.shape());
+   /// Evaluated the expression
+   [[maybe_unused]] auto eval() noexcept -> evaluated_type {
+      if (_value)
+         return evaluated_type(_value);
+
+      // Evaluate Input
+      if constexpr (::ten::isUnaryNode<Input>::value ||
+                    ::ten::isBinaryNode<Input>::value) {
+         if (!_input.get()->evaluated()) {
+            _input.get()->eval();
          }
       }
-      func_type::call(std::forward<T>(input), *_value.get());
+
+      // Allocate output
+      if constexpr (::ten::isScalarNode<Output>::value) {
+         _value.reset(new Output());
+      } else if constexpr (!::ten::isScalarNode<Output>::value &&
+                           Output::isStatic()) {
+         _value.reset(new Output());
+      } else {
+         _value.reset(
+             new Output(::ten::details::NodeWrapper<Input>::shape(_input)));
+      }
+
+      // Evaluate
+      if constexpr (func_type::isParametric()) {
+         _func.value().call(*::ten::details::NodeWrapper<Input>::ptr(_input),
+                            *_value.get());
+      } else {
+         func_type::call(*::ten::details::NodeWrapper<Input>::ptr(_input),
+                         *_value.get());
+      }
+
+      return evaluated_type(_value);
    }
 };
 
@@ -188,91 +198,47 @@ class UnaryExpr : ::ten::Expr<UnaryExpr<E, Func, Args...>> {
  public:
    /// \typedef input_type
    /// Type of the input type of the function
-   using input_type = typename InputNode<E, Func, Args...>::type;
-   // input_type is ScalarNode or TensorNode
-   static_assert(isScalarNode<input_type>::value ||
-                     isTensorNode<input_type>::value,
-                 "Input type of the function of a UnaryExpr must be a "
-                 "ScalarNode or TensorNode.");
+   using input_node_type = ::ten::details::OutputNodeType<E>::type;
 
    /// \typedef output_type
    /// Type of the output type of the function
-   using output_type = typename Func<input_type>::output_type;
-   // output_type is ScalarNode or TensorNode
-   static_assert(isScalarNode<output_type>::value ||
-                     isTensorNode<output_type>::value,
-                 "Output type of the function of a UnaryExpr must be a "
-                 "ScalarNode or TensorNode.");
+   using output_type = typename Func<input_node_type>::output_type;
 
    /// \typedef node_type
    /// Type of the node of the unary expresion
-   using node_type = UnaryNode<input_type, output_type, Func, Args...>;
-
-   /// \typedef parent_type
-   /// Parent node type
-   using parent_type = typename E::node_type;
+   using node_type = UnaryNode<E, output_type, Func, Args...>;
 
    /// \typedef expr_type
    /// Type of the evaluated expression
-   using evaluated_type = std::conditional_t<isTensorNode<output_type>::value,
-                                             typename output_type::tensor_type,
-                                             typename output_type::scalar_type>;
+   using evaluated_type = std::conditional_t<isScalarNode<output_type>::value,
+                                             typename output_type::scalar_type,
+                                             typename output_type::tensor_type>;
 
  private:
-   bool _evaluated = false;
    /// Shared ptr to the node
    std::shared_ptr<node_type> _node;
-   /// Shared ptr to the parent node
-   std::shared_ptr<parent_type> _parent;
 
  public:
    /// Construct a ten::UnaryNode from an expression
-   explicit UnaryExpr(const E &e) noexcept
-       : _node(std::make_shared<node_type>()), _parent(e.node()) {
-      // std::cout << "UnaryExpr(const E&)" << std::endl;
-   }
-
-   /* TODO explicit UnaryExpr(E&& e) noexcept
-    : _node(std::make_shared<node_type>()), _parent() {
-    std::cout << "UnaryExpr(E&&)" << std::endl;
-   }*/
+   explicit UnaryExpr(const std::shared_ptr<E> &expr) noexcept
+       : _node(std::make_shared<node_type>(expr)) {}
 
    // Returns the shared pointer to the node of the expression
    [[nodiscard]] std::shared_ptr<node_type> node() const { return _node; }
 
-   /// Returns the parent node (input node)
-   [[nodiscard]] std::shared_ptr<parent_type> parent() const { return _parent; }
-
    /// Returns whether the expression is evaluated
-   bool evaluated() const { return _evaluated; }
-
-   /// Returns the shared pointer to the node of the evaluated expression
-   [[nodiscard]] std::shared_ptr<output_type> valueNode() {
-      return _node.get()->value();
-   }
+   [[nodiscard]] bool evaluated() const { return _node.get()->evaluated(); }
 
    /// Returns the scalar or tensor value of the evaluated expression
    [[nodiscard]] auto value() -> evaluated_type {
-      return evaluated_type(_node.get()->value());
+      return evaluated_type(_node.get()->node());
    }
 
    /// Evaluate a unary expression
    /// If the input expression has not been evaluated, it will evaluate it
    /// recursively before evaluating this expression.
    [[maybe_unused]] auto eval() -> evaluated_type {
-      if (_evaluated)
-         return value();
-
-      if constexpr (isTensor<E>::value || isScalar<E>::value) {
-         _node.get()->callFunc(*_parent.get());
-      } else if constexpr (isBinaryExpr<E>::value) {
-         // FIXME move these to the node like in BinaryNode and BinaryExpr
-         _parent.get()->eval();
-         _node.get()->callFunc(*_parent.get()->valueNode());
-      }
-
-      _evaluated = true;
-      return value();
+      return _node.get()->eval();
    }
 };
 
@@ -325,31 +291,35 @@ class BinaryNode {
 
    constexpr inline bool isParametric() { return func_type::isParametric(); }
 
-   inline bool hasFunc() const { return _func.has_value(); }
-
    const func_type &func() { return _func.value(); }
 
    [[nodiscard]] inline std::shared_ptr<Output> node() { return _value; }
 
    /// Returns whether the expression is evaluated
-   [[nodiscard]] bool evaluated() const { return _value; }
+   [[nodiscard]] bool evaluated() const { return _value.get(); }
 
    /// Returns the the evaluated expression of type ten::Scalar of ten::Tensor
    [[nodiscard]] auto value() -> evaluated_type {
       return evaluated_type(_value);
    }
 
-   auto eval() noexcept -> evaluated_type {
+   [[maybe_unused]] auto eval() noexcept -> evaluated_type {
       if (_value)
          return evaluated_type(_value);
 
       // Evaluate LeftExpr
-      if constexpr (::ten::isBinaryNode<Left>::value) {
-         _left.get()->eval();
+      if constexpr (::ten::isUnaryNode<Left>::value ||
+                    ::ten::isBinaryNode<Left>::value) {
+         if (!_left.get()->evaluated()) {
+            _left.get()->eval();
+         }
       }
       // Evaluate RightExpr
-      if constexpr (::ten::isBinaryNode<Right>::value) {
-         _right.get()->eval();
+      if constexpr (::ten::isUnaryNode<Right>::value ||
+                    ::ten::isBinaryNode<Right>::value) {
+         if (!_right.get()->evaluated()) {
+            _right.get()->eval();
+         }
       }
 
       if constexpr (Output::isStatic()) {
@@ -419,19 +389,8 @@ class BinaryExpr : ::ten::Expr<BinaryExpr<Left, Right, Func, Args...>> {
                        const std::shared_ptr<Right> &right) noexcept
        : _node(std::make_shared<node_type>(left, right)) {}
 
-   //, _left_input(left.node()), _right_input(right.node()) {}
    /// Returns a shared pointer to the node of the expression
    [[nodiscard]] std::shared_ptr<node_type> node() const { return _node; }
-
-   /// Returns a shared pointer to the left input
-   /*[[nodiscard]] std::shared_ptr<left_input_type> leftInput() const {
-      return _left_input;
-   }*/
-
-   /// Returns a shared pointer to the right input
-   /*[[nodiscard]] std::shared_ptr<right_input_type> rightInput() const {
-      return _right_input;
-   }*/
 
    /// Returns whether the expression is evaluated
    [[nodiscard]] bool evaluated() const { return _node.get()->evaluated(); }

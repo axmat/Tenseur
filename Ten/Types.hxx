@@ -201,6 +201,11 @@ template <class Input, class Output, template <typename...> class Func,
           typename... Args>
 class UnaryNode;
 
+template <class> struct isUnaryNode : std::false_type {};
+template <class Input, class Output, template <typename...> class Func,
+          typename... Args>
+struct isUnaryNode<UnaryNode<Input, Output, Func, Args...>> : std::true_type {};
+
 // Unary Expr
 template <class E, template <typename...> class Func, typename... Args>
 class UnaryExpr;

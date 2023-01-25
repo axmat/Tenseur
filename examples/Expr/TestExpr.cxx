@@ -26,38 +26,11 @@ int main() {
       for (size_t i = 0; i < 3; i++)
          x[i] = -float(i);
 
-      using Tensor_t = DynamicTensor<float, 1>;
-
-      static_assert(std::is_same_v<
-                    Tensor_t::node_type,
-                    TensorNode<float, DynamicShape<1>, StorageOrder::ColMajor,
-                               DenseStorage<float, std::allocator<float>>,
-                               std::allocator<float>>>);
-
-      auto e = abs(x);
-      using E = decltype(e);
-      static_assert(std::is_same_v<E, UnaryExpr<Tensor_t, functional::Abs>>);
-      static_assert(std::is_same_v<E::parent_type, Tensor_t::node_type>);
-
-      static_assert(
-          std::is_same_v<E::node_type,
-                         UnaryNode<Tensor_t::node_type, Tensor_t::node_type,
-                                   functional::Abs>>);
-
-      static_assert(std::is_same_v<E::input_type, Tensor_t::node_type>);
-
-      static_assert(std::is_same_v<E::output_type, Tensor_t::node_type>);
-
-      cout << x.node().get() << endl;
-      cout << e.parent().get() << endl;
-
-      e.eval();
-      auto out_node = e.valueNode();
-      auto out_tensor = e.value();
+      auto e = abs(x).eval();
 
       cout << "abs(x) = [ ";
       for (size_t i = 0; i < 3; i++)
-         cout << out_tensor[i] << " ";
+         cout << e[i] << " ";
       cout << "]" << endl;
 
       cout << "And x = [ ";
@@ -71,12 +44,6 @@ int main() {
       DynamicTensor<float, 1> x({3});
       for (size_t i = 0; i < 3; i++)
          x[i] = -float(i + 1.);
-      using Tensor_t = DynamicTensor<float, 1>;
-
-      using t = InputNode<Tensor_t, ten::functional::Min>;
-      using r = t::type;
-      static_assert(std::is_same_v<r, Tensor_t::node_type>);
-
       auto e = min(x);
       auto v = e.eval();
 
@@ -214,18 +181,28 @@ int main() {
       printTensor(d);
    }
 
-   /*
    {
       cout << "Chain unary expressions" << std::endl;
       DynamicTensor<float, 1> a({5});
       for (size_t i = 0; i < 5; i++) {
          a[i] = i;
       }
-      auto b = 2. * a;
+      auto b = sqrt(a);
       auto c = sqrt(b).eval();
       printTensor(c);
-      //static_assert(std::is_same_v<decltype(c), DynamicTensor<float, 1>>);
-   }*/
+   }
+
+   {
+      cout << "Chain unary and binary expressions" << std::endl;
+      DynamicTensor<float, 1> a({5});
+      for (size_t i = 0; i < 5; i++) {
+         a[i] = i;
+      }
+      auto b = 2. * a;
+      auto c = sqrt(b);
+      auto d = (c + a).eval();
+      printTensor(d);
+   }
 
    return 0;
 }
