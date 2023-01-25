@@ -222,10 +222,18 @@ struct MulResult<A, B> {
                            typename A::allocator_type>;
 };
 
+// scalar - tensor
+template <ScalarNodeConcept A, TensorNodeConcept B> struct MulResult<A, B> {
+   using type = B;
+};
+
 } // namespace details
 
 template <class A, class B, class C = typename details::MulResult<A, B>::type>
-struct Mul {
+struct Mul;
+
+// vector - vector
+template <VectorNode A, VectorNode B, VectorNode C> struct Mul<A, B, C> {
    using left_input_type = A;
    using right_input_type = B;
    using output_type = C;
@@ -238,28 +246,69 @@ struct Mul {
 
    static constexpr output_shape_type
    outputShape(const left_shape_type &left, const right_shape_type &right) {
-      if constexpr (C::isVector()) {
-         std::initializer_list<size_type> &&dims = {
-             std::max(left.dim(0), right.dim(0))};
-         output_shape_type s(std::move(dims));
-         return s;
-      } else {
-         std::initializer_list<size_type> &&dims = {left.dim(0), right.dim(1)};
-         output_shape_type s(std::move(dims));
-         return s;
-      }
+      std::initializer_list<size_type> &&dims = {
+          std::max(left.dim(0), right.dim(0))};
+      output_shape_type s(std::move(dims));
+      return s;
    }
 
    static constexpr void call(const A &left, const B &right, C &result) {
-      if constexpr (C::isVector()) {
-         size_t n = left.size();
-         using value_type = typename C::value_type;
-         for (size_t i = 0; i < n; i++) {
-            result[i] = static_cast<value_type>(left[i]) *
-                        static_cast<value_type>(right[i]);
-         }
-      } else {
-         kernels::mul(left, right, result);
+      size_t n = left.size();
+      using value_type = typename C::value_type;
+      for (size_t i = 0; i < n; i++) {
+         result[i] = static_cast<value_type>(left[i]) *
+                     static_cast<value_type>(right[i]);
+      }
+   }
+};
+
+// matrix - matrix
+template <MatrixNode A, MatrixNode B, MatrixNode C> struct Mul<A, B, C> {
+   using left_input_type = A;
+   using right_input_type = B;
+   using output_type = C;
+
+   using left_shape_type = typename A::shape_type;
+   using right_shape_type = typename B::shape_type;
+   using output_shape_type = typename C::shape_type;
+
+   static constexpr bool isParametric() { return false; }
+
+   static constexpr output_shape_type
+   outputShape(const left_shape_type &left, const right_shape_type &right) {
+      std::initializer_list<size_type> &&dims = {left.dim(0), right.dim(1)};
+      output_shape_type s(std::move(dims));
+      return s;
+   }
+
+   static constexpr void call(const A &left, const B &right, C &result) {
+      kernels::mul(left, right, result);
+   }
+};
+
+// scalar - tensor
+template <ScalarNodeConcept A, TensorNodeConcept B, TensorNodeConcept C>
+struct Mul<A, B, C> {
+   using left_input_type = A;
+   using right_input_type = B;
+   using output_type = C;
+
+   using right_shape_type = typename B::shape_type;
+   using output_shape_type = typename C::shape_type;
+
+   static constexpr bool isParametric() { return false; }
+
+   static constexpr output_shape_type
+   outputShape(const right_shape_type &right) {
+      return right;
+   }
+
+   static constexpr void call(const A &left, const B &right, C &result) {
+      size_t n = result.size();
+      using value_type = typename C::value_type;
+      for (size_t i = 0; i < n; i++) {
+         result[i] = static_cast<value_type>(left.value()) *
+                     static_cast<value_type>(right[i]);
       }
    }
 };

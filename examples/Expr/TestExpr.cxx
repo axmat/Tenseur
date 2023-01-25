@@ -154,8 +154,6 @@ int main() {
       static_assert(std::is_same_v<decltype(c), DynamicTensor<float, 1>>);
    }
 
-
-
    {
       cout << "Binary expr A * B" << std::endl;
       DynamicTensor<float, 2> a({2, 3});
@@ -190,6 +188,44 @@ int main() {
       }
       static_assert(std::is_same_v<decltype(c), DynamicTensor<float, 2>>);
    }
+
+   {
+      cout << "Binary expr alpha * a" << std::endl;
+      DynamicTensor<float, 1> a({5});
+      for (size_t i = 0; i < 5; i++) {
+         a[i] = i;
+      }
+      auto c = (2. * a).eval();
+      printTensor(c);
+      static_assert(std::is_same_v<decltype(c), DynamicTensor<float, 1>>);
+   }
+
+   {
+      cout << "Chain binary expressions" << std::endl;
+      DynamicTensor<float, 1> a({5}), b({5});
+      for (size_t i = 0; i < 5; i++) {
+         a[i] = i;
+         b[i] = i;
+      }
+      auto c = a + b;
+      // 0 2 4  6  8
+      // 0 2 8 18 32
+      auto d = (c * a).eval();
+      printTensor(d);
+   }
+
+   /*
+   {
+      cout << "Chain unary expressions" << std::endl;
+      DynamicTensor<float, 1> a({5});
+      for (size_t i = 0; i < 5; i++) {
+         a[i] = i;
+      }
+      auto b = 2. * a;
+      auto c = sqrt(b).eval();
+      printTensor(c);
+      //static_assert(std::is_same_v<decltype(c), DynamicTensor<float, 1>>);
+   }*/
 
    return 0;
 }

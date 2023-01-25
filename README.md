@@ -8,10 +8,12 @@ A header only C++20 tensor library [WIP]
 - BLAS backend for high performance numerical linear algebra
 
 ## Todo
+- Chain expressions
 - Check tensor shapes at compile time whenever possible
 - Sparse tensors
 - Special matrices
 - Automatic differentiation
+- Python binding
 
 ## Example
 ```

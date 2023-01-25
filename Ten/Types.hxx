@@ -147,7 +147,7 @@ struct isVectorNode<TensorNode<Scalar, Shape, order, Storage, Allocator>> {
    static constexpr bool value = Shape::rank() == 1;
 };
 
-template<class T>
+template <class T>
 concept VectorNode = isVectorNode<T>::value;
 
 // Matrix node
@@ -158,21 +158,25 @@ struct isMatrixNode<TensorNode<Scalar, Shape, order, Storage, Allocator>> {
    static constexpr bool value = Shape::rank() == 2;
 };
 
-template<class T>
+template <class T>
 concept MatrixNode = isMatrixNode<T>::value;
 
 // Concepts
-template<class A, class B>
-concept SameShape = std::is_same_v<typename A::shape_type, typename B::shape_type>;
+template <class A, class B>
+concept SameShape =
+    std::is_same_v<typename A::shape_type, typename B::shape_type>;
 
-template<class A, class B>
-concept SameStorageOrder = A::storageOrder() == B::storageOrder();
+template <class A, class B>
+concept SameStorageOrder = A::storageOrder() ==
+B::storageOrder();
 
-template<class A, class B>
-concept SameStorage = std::is_same_v<typename A::storage_type, typename B::storage_type>;
+template <class A, class B>
+concept SameStorage =
+    std::is_same_v<typename A::storage_type, typename B::storage_type>;
 
-template<class A, class B>
-concept SameAllocator = std::is_same_v<typename A::allocator_type, typename B::allocator_type>;
+template <class A, class B>
+concept SameAllocator =
+    std::is_same_v<typename A::allocator_type, typename B::allocator_type>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Node types
@@ -200,6 +204,36 @@ class UnaryNode;
 // Unary Expr
 template <class E, template <typename...> class Func, typename... Args>
 class UnaryExpr;
+
+template <class> struct isUnaryExpr : std::false_type {};
+template <class E, template <typename...> class Func, typename... Args>
+struct isUnaryExpr<UnaryExpr<E, Func, Args...>> : std::true_type {};
+
+// Binary Node
+template <class Left, class Right, class Output,
+          template <typename...> class Func, typename... Args>
+class BinaryNode;
+
+template <class> struct isBinaryNode : std::false_type {};
+template <class L, class R, class O, template <typename...> class Func,
+          typename... Args>
+struct isBinaryNode<BinaryNode<L, R, O, Func, Args...>> : std::true_type {};
+
+// Binary Expr
+template <class L, class R, template <typename...> class Func, typename... Args>
+class BinaryExpr;
+
+template <class> struct isBinaryExpr : std::false_type {};
+template <class L, class R, template <typename...> class Func, typename... Args>
+struct isBinaryExpr<BinaryExpr<L, R, Func, Args...>> : std::true_type {};
+
+// Concepts
+// FIXME Better names??
+template <typename T>
+concept ScalarNodeConcept = isScalarNode<T>::value;
+
+template <typename T>
+concept TensorNodeConcept = isTensorNode<T>::value;
 
 } // namespace ten
 
