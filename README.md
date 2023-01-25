@@ -6,9 +6,10 @@ A header only C++20 tensor library [WIP]
 - Support static, dynamic and mixed shape tensors
 - Lazy evaluation of expressions
 - BLAS backend for high performance numerical linear algebra
+- Chain expressions
 
 ## Todo
-- Chain expressions
+- Operators precedence
 - Check tensor shapes at compile time whenever possible
 - Sparse tensors
 - Special matrices
@@ -17,12 +18,16 @@ A header only C++20 tensor library [WIP]
 
 ## Example
 ```
-DynamicTensor<float, 1> a({3});
-DynamicTensor<float, 1> b({3});
-for (size_t i = 0; i < 3; i++) {
+DynamicTensor<float, 1> a({3, 3}), b({3, 3});
+DynamicTensor<float, 1> c({3});
+for (size_t i = 0; i < 3*3; i++) {
    a[i] = i;
    b[i] = i;
 }
+for (size_t i = 0; i < 3*3; i++) {
+   c[i] = i;
+}
 
-auto c = (a + b).eval();
+auto e = (a * b) + c;
+auto x = e.eval();
 ```
