@@ -47,6 +47,20 @@ auto operator+(LeftExpr &&left, RightExpr &&right) {
                             ::ten::functional::Add>(left.node(), right.node());
 }
 
+template <typename T, typename E>
+   requires ::ten::isExpr<std::remove_cvref_t<E>>
+auto operator+(T &&scalar, E &&expr) {
+   using R = std::remove_cvref_t<E>;
+   return Scalar<T>(scalar) + std::forward<R>(expr);
+}
+
+template <typename E, typename T>
+   requires ::ten::isExpr<std::remove_cvref_t<E>>
+auto operator+(E&& expr, T &&scalar) {
+   using R = std::remove_cvref_t<E>;
+   return std::forward<R>(expr) + Scalar<T>(scalar);
+}
+
 // Substract two expressions
 template <typename LeftExpr, typename RightExpr>
    requires ::ten::isExpr<std::remove_cvref_t<LeftExpr>> &&
@@ -56,6 +70,20 @@ auto operator-(LeftExpr &&left, RightExpr &&right) {
    using R = std::remove_cvref_t<RightExpr>;
    return ::ten::BinaryExpr<typename L::node_type, typename R::node_type,
                             ::ten::functional::Sub>(left.node(), right.node());
+}
+
+template <typename T, typename E>
+   requires ::ten::isExpr<std::remove_cvref_t<E>>
+auto operator-(T &&scalar, E &&expr) {
+   using R = std::remove_cvref_t<E>;
+   return Scalar<T>(scalar) - std::forward<R>(expr);
+}
+
+template <typename E, typename T>
+   requires ::ten::isExpr<std::remove_cvref_t<E>>
+auto operator-(E&& expr, T &&scalar) {
+   using R = std::remove_cvref_t<E>;
+   return std::forward<R>(expr) - Scalar<T>(scalar);
 }
 
 // Multiply two expressions
@@ -76,18 +104,12 @@ auto operator*(T &&scalar, E &&expr) {
    return Scalar<T>(scalar) * std::forward<R>(expr);
 }
 
-/*template <typename LeftExpr, typename RightExpr>
-   requires ::ten::isExpr<std::remove_cvref_t<LeftExpr>> &&
-            ::ten::isExpr<std::remove_cvref_t<RightExpr>> &&
-   ::ten::isBinaryExpr<std::remove_cvref_t<LeftExpr>>::value
-auto operator*(LeftExpr &&left, RightExpr &&right) {
-   using L = std::remove_cvref_t<LeftExpr>;
-   using R = std::remove_cvref_t<RightExpr>;
-   //return ::ten::BinaryExpr<typename L::node_type, R, ::ten::functional::Mul>(
-   //    std::forward<typename L::node_type>(left.node()),
-std::forward<RightExpr>(right)); return ::ten::BinaryExpr<typename L::node_type,
-R, ::ten::functional::Mul>( left.node(), std::forward<RightExpr>(right));
-}*/
+template <typename E, typename T>
+   requires ::ten::isExpr<std::remove_cvref_t<E>>
+auto operator*(E&& expr, T &&scalar) {
+   using R = std::remove_cvref_t<E>;
+   return std::forward<R>(expr) * Scalar<T>(scalar);
+}
 
 // Divide two expressions
 template <typename LeftExpr, typename RightExpr>
@@ -98,6 +120,20 @@ auto operator/(LeftExpr &&left, RightExpr &&right) {
    using R = std::remove_cvref_t<RightExpr>;
    return ::ten::BinaryExpr<typename L::node_type, typename R::node_type,
                             ::ten::functional::Div>(left.node(), right.node());
+}
+
+template <typename T, typename E>
+   requires ::ten::isExpr<std::remove_cvref_t<E>>
+auto operator/(T &&scalar, E &&expr) {
+   using R = std::remove_cvref_t<E>;
+   return Scalar<T>(scalar) / std::forward<R>(expr);
+}
+
+template <typename E, typename T>
+   requires ::ten::isExpr<std::remove_cvref_t<E>>
+auto operator/(E&& expr, T &&scalar) {
+   using R = std::remove_cvref_t<E>;
+   return std::forward<R>(expr) / Scalar<T>(scalar);
 }
 
 /// \class ScalarOperations
