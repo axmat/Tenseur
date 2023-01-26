@@ -117,98 +117,58 @@ template <class A, class B>
 using common_type_t = typename CommonType<A, B>::type;
 } // namespace details
 
-template <class A, class B, class C = details::common_type_t<A, B>> struct Add {
-   static_assert(A::isVector() && B::isVector(),
-                 "Expected A and B to be vectors.");
+// Binary operation
+enum class BinaryOperation { add, sub, div };
 
-   using left_input_type = A;
-   using right_input_type = B;
-   using output_type = C;
+// Binary function
+template <BinaryOperation kind> struct BinaryFunc {
 
-   using left_shape_type = typename A::shape_type;
-   using right_shape_type = typename B::shape_type;
-   using output_shape_type = typename C::shape_type;
+   template <class A, class B, class C = details::common_type_t<A, B>>
+   struct Func {
+      static_assert(A::isVector() && B::isVector(),
+                    "Expected A and B to be vectors.");
 
-   static constexpr output_shape_type
-   outputShape(const left_shape_type &left, const right_shape_type &right) {
-      output_shape_type s(left);
-      return s;
-   }
+      using left_input_type = A;
+      using right_input_type = B;
+      using output_type = C;
 
-   static constexpr auto outputShape(const A &a, const B &b) {
-      return a.shape();
-   }
+      using left_shape_type = typename A::shape_type;
+      using right_shape_type = typename B::shape_type;
+      using output_shape_type = typename C::shape_type;
 
-   static constexpr bool isParametric() { return false; }
-
-   static constexpr void call(const A &left, const B &right, C &result) {
-      size_t n = left.size();
-      using value_type = typename C::value_type;
-      for (size_t i = 0; i < n; i++) {
-         result[i] = static_cast<value_type>(left[i]) +
-                     static_cast<value_type>(right[i]);
+      static constexpr output_shape_type
+      outputShape(const left_shape_type &left, const right_shape_type &right) {
+         output_shape_type s(left);
+         return s;
       }
-   }
-};
 
-template <class A, class B, class C = details::common_type_t<A, B>> struct Sub {
-   static_assert(A::isVector() && B::isVector(),
-                 "Expected A and B to be vectors.");
-
-   using left_input_type = A;
-   using left_output_type = B;
-   using output_type = C;
-
-   using left_shape_type = typename A::shape_type;
-   using right_shape_type = typename B::shape_type;
-   using output_shape_type = typename C::shape_type;
-
-   static constexpr output_shape_type
-   outputShape(const left_shape_type &left, const right_shape_type &right) {
-      output_shape_type s(left);
-      return s;
-   }
-
-   static constexpr bool isParametric() { return false; }
-
-   static constexpr void call(const A &left, const B &right, C &result) {
-      size_t n = left.size();
-      using value_type = typename C::value_type;
-      for (size_t i = 0; i < n; i++) {
-         result[i] = static_cast<value_type>(left[i]) -
-                     static_cast<value_type>(right[i]);
+      static constexpr auto outputShape(const A &a, const B &b) {
+         return a.shape();
       }
-   }
-};
 
-template <class A, class B, class C = details::common_type_t<A, B>> struct Div {
-   static_assert(A::isVector() && B::isVector(),
-                 "Expected A and B to be vectors.");
+      static constexpr bool isParametric() { return false; }
 
-   using left_input_type = A;
-   using left_output_type = B;
-   using output_type = C;
-
-   using left_shape_type = typename A::shape_type;
-   using right_shape_type = typename B::shape_type;
-   using output_shape_type = typename C::shape_type;
-
-   static constexpr output_shape_type
-   outputShape(const left_shape_type &left, const right_shape_type &right) {
-      output_shape_type s(left);
-      return s;
-   }
-
-   static constexpr bool isParametric() { return false; }
-
-   static constexpr void call(const A &left, const B &right, C &result) {
-      size_t n = left.size();
-      using value_type = typename C::value_type;
-      for (size_t i = 0; i < n; i++) {
-         result[i] = static_cast<value_type>(left[i]) /
-                     static_cast<value_type>(right[i]);
+      static constexpr void call(const A &left, const B &right, C &result) {
+         size_t n = left.size();
+         using value_type = typename C::value_type;
+         for (size_t i = 0; i < n; i++) {
+            switch (kind) {
+            case BinaryOperation::add:
+               result[i] = static_cast<value_type>(left[i]) +
+                           static_cast<value_type>(right[i]);
+               break;
+            case BinaryOperation::sub:
+               result[i] = static_cast<value_type>(left[i]) -
+                           static_cast<value_type>(right[i]);
+               break;
+            case BinaryOperation::div:
+               result[i] = static_cast<value_type>(left[i]) /
+                           static_cast<value_type>(right[i]);
+               break;
+            }
+         }
       }
-   }
+   };
 };
 
 namespace details {

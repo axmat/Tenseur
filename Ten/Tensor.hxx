@@ -43,8 +43,10 @@ template <typename LeftExpr, typename RightExpr>
 auto operator+(LeftExpr &&left, RightExpr &&right) {
    using L = std::remove_cvref_t<LeftExpr>;
    using R = std::remove_cvref_t<RightExpr>;
-   return ::ten::BinaryExpr<typename L::node_type, typename R::node_type,
-                            ::ten::functional::Add>(left.node(), right.node());
+   return ::ten::BinaryExpr<
+       typename L::node_type, typename R::node_type,
+       ::ten::functional::BinaryFunc<functional::BinaryOperation::add>::Func>(
+       left.node(), right.node());
 }
 
 template <typename T, typename E>
@@ -68,8 +70,10 @@ template <typename LeftExpr, typename RightExpr>
 auto operator-(LeftExpr &&left, RightExpr &&right) {
    using L = std::remove_cvref_t<LeftExpr>;
    using R = std::remove_cvref_t<RightExpr>;
-   return ::ten::BinaryExpr<typename L::node_type, typename R::node_type,
-                            ::ten::functional::Sub>(left.node(), right.node());
+   return ::ten::BinaryExpr<
+       typename L::node_type, typename R::node_type,
+       ::ten::functional::BinaryFunc<functional::BinaryOperation::sub>::Func>(
+       left.node(), right.node());
 }
 
 template <typename T, typename E>
@@ -118,8 +122,10 @@ template <typename LeftExpr, typename RightExpr>
 auto operator/(LeftExpr &&left, RightExpr &&right) {
    using L = std::remove_cvref_t<LeftExpr>;
    using R = std::remove_cvref_t<RightExpr>;
-   return ::ten::BinaryExpr<typename L::node_type, typename R::node_type,
-                            ::ten::functional::Div>(left.node(), right.node());
+   return ::ten::BinaryExpr<
+       typename L::node_type, typename R::node_type,
+       ::ten::functional::BinaryFunc<functional::BinaryOperation::div>::Func>(
+       left.node(), right.node());
 }
 
 template <typename T, typename E>
