@@ -190,6 +190,155 @@ int main() {
    }
 
    {
+      cout << "fill static tensor" << endl;
+      auto x = fill<Tensor<float, Shape<10>>>(3.);
+      cout << "x = ";
+      for (size_t i = 0; i < 10; i++) {
+         cout << x[i] << " ";
+      }
+      cout << endl;
+
+      auto y = fill<float, Shape<10>>(3.);
+      cout << "y = ";
+      for (size_t i = 0; i < 10; i++) {
+         cout << y[i] << " ";
+      }
+      cout << endl;
+   }
+
+   {
+      cout << "fill dynamic tensor" << endl;
+      auto x = fill<Tensor<float, Shape<2, dynamic>>>(
+         Shape<2, dynamic>({2, 3}), 3.);
+      cout << "x = ";
+      for (size_t i = 0; i < 6; i++) {
+         cout << x[i] << " ";
+      }
+      cout << endl;
+
+      auto y = fill<Tensor<float, Shape<2, dynamic>>>({2, 3}, 3.);
+      cout << "y = ";
+      for (size_t i = 0; i < 6; i++) {
+         cout << y[i] << " ";
+      }
+      cout << endl;
+
+      auto z = fill<float, Shape<2, dynamic>>(Shape<2, dynamic>({2, 3}),
+         3.);
+      cout << "z = ";
+      for (size_t i = 0; i < 6; i++) {
+         cout << z[i] << " ";
+      }
+      cout << endl;
+
+      auto t = fill<float, Shape<2, dynamic>>({2, 3}, 3.);
+      cout << "t = ";
+      for (size_t i = 0; i < 6; i++) {
+         cout << t[i] << " ";
+      }
+      cout << endl;
+   }
+
+
+   {
+      cout << "zeros static tensor" << endl;
+      auto x = zeros<Tensor<float, Shape<10>>>();
+      cout << "x = ";
+      for (size_t i = 0; i < 10; i++) {
+         cout << x[i] << " ";
+      }
+      cout << endl;
+
+      auto y = zeros<float, Shape<10>>();
+      cout << "y = ";
+      for (size_t i = 0; i < 10; i++) {
+         cout << y[i] << " ";
+      }
+      cout << endl;
+   }
+
+   {
+      cout << "zeros dynamic tensor" << endl;
+      auto x = zeros<Tensor<float, Shape<2, dynamic>>>(
+         Shape<2, dynamic>({2, 3}));
+      cout << "x = ";
+      for (size_t i = 0; i < 6; i++) {
+         cout << x[i] << " ";
+      }
+      cout << endl;
+
+      auto y = zeros<Tensor<float, Shape<2, dynamic>>>({2, 3});
+      cout << "y = ";
+      for (size_t i = 0; i < 6; i++) {
+         cout << y[i] << " ";
+      }
+      cout << endl;
+
+      auto z = zeros<float, Shape<2, dynamic>>(Shape<2, dynamic>({2, 3}));
+      cout << "z = ";
+      for (size_t i = 0; i < 6; i++) {
+         cout << z[i] << " ";
+      }
+      cout << endl;
+
+      auto t = zeros<float, Shape<2, dynamic>>({2, 3});
+      cout << "t = ";
+      for (size_t i = 0; i < 6; i++) {
+         cout << t[i] << " ";
+      }
+      cout << endl;
+   }
+
+   {
+      cout << "ones static tensor" << endl;
+      auto x = ones<Tensor<float, Shape<10>>>();
+      cout << "x = ";
+      for (size_t i = 0; i < 10; i++) {
+         cout << x[i] << " ";
+      }
+      cout << endl;
+
+      auto y = ones<float, Shape<10>>();
+      cout << "y = ";
+      for (size_t i = 0; i < 10; i++) {
+         cout << y[i] << " ";
+      }
+      cout << endl;
+   }
+
+   {
+      cout << "ones dynamic tensor" << endl;
+      auto x = ones<Tensor<float, Shape<2, dynamic>>>(
+         Shape<2, dynamic>({2, 3}));
+      cout << "x = ";
+      for (size_t i = 0; i < 6; i++) {
+         cout << x[i] << " ";
+      }
+      cout << endl;
+
+      auto y = ones<Tensor<float, Shape<2, dynamic>>>({2, 3});
+      cout << "y = ";
+      for (size_t i = 0; i < 6; i++) {
+         cout << y[i] << " ";
+      }
+      cout << endl;
+
+      auto z = ones<float, Shape<2, dynamic>>(Shape<2, dynamic>({2, 3}));
+      cout << "z = ";
+      for (size_t i = 0; i < 6; i++) {
+         cout << z[i] << " ";
+      }
+      cout << endl;
+
+      auto t = ones<float, Shape<2, dynamic>>({2, 3});
+      cout << "t = ";
+      for (size_t i = 0; i < 6; i++) {
+         cout << t[i] << " ";
+      }
+      cout << endl;
+   }
+
+   {
       cout << "iota static tensor" << endl;
       auto x = iota<Tensor<float, Shape<10>>>();
       cout << "x = ";

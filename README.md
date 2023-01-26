@@ -25,7 +25,7 @@ using namespace ten;
 int main() {
    auto a = iota<float, Shape<3, 3>>();
    auto b = iota<Tensor<float, Shape<3, 3>>>();
-   auto c = fill<float, Shape<3>>(1.);
+   auto c = ones<float, Shape<3>>();
 
    auto e = a * b + c;
    auto x = e.eval();

@@ -532,8 +532,7 @@ using DynamicTensor = Tensor<T, DynamicShape<Rank>, order, Storage, Allocator>;
 ////////////////////////////////////////////////////////////////////////////////
 // Functions for creating a new tensor
 
-/// \fn fill
-/// Create a tensor filled with value
+// fill<Tensor<...>>(value)
 template <class T>
    requires(::ten::isDenseTensor<T>::value)
 [[nodiscard]] auto fill(typename T::value_type value) {
@@ -543,6 +542,7 @@ template <class T>
    return x;
 }
 
+// fill<T, Shape, Order, Storage, Allocator>(value)
 template <class T, class Shape, StorageOrder Order = defaultOrder,
           class Storage = DefaultStorage<T, Shape>,
           class Allocator = typename details::AllocatorType<Storage>::type>
@@ -552,9 +552,185 @@ template <class T, class Shape, StorageOrder Order = defaultOrder,
    return fill<Tensor<T, Shape, Order, Storage, Allocator>>(value);
 }
 
-// TODO ones, zeros, cast
+// fill<Tensor<...>>(shape, value)
+template <class T>
+   requires(::ten::isDynamicTensor<T>::value &&
+            ::ten::isDenseStorage<typename T::storage_type>::value)
+[[nodiscard]] auto fill(typename T::shape_type &&shape,
+                        typename T::value_type value) {
+   using value_type = typename T::value_type;
+   using shape_type = typename T::shape_type;
+   T x(std::forward<shape_type>(shape));
+   for (size_type i = 0; i < x.size(); i++) {
+      x[i] = value;
+   }
+   return x;
+}
 
-// iota - static tensor
+template <class T>
+   requires(::ten::isDynamicTensor<T>::value &&
+            ::ten::isDenseStorage<typename T::storage_type>::value)
+[[nodiscard]] auto fill(std::initializer_list<size_type> &&dims,
+                        typename T::value_type value) {
+   using shape_type = typename T::shape_type;
+   return fill<T>(shape_type(std::move(dims)), value);
+}
+
+// fill<T, shape, Order, Storage, Allocator>(shape, value)
+template <
+    class T, class Shape, StorageOrder Order = defaultOrder,
+    class Storage = ::ten::DefaultStorage<T, Shape>,
+    class Allocator = typename ::ten::details::AllocatorType<Storage>::type>
+   requires(::ten::isDynamicTensor<
+                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+            ::ten::isDenseStorage<Storage>::value)
+[[nodiscard]] auto fill(Shape &&shape, T value) {
+   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   return fill<tensor_type>(std::forward<Shape>(shape), value);
+}
+
+template <
+    class T, class Shape, StorageOrder Order = defaultOrder,
+    class Storage = ::ten::DefaultStorage<T, Shape>,
+    class Allocator = typename ::ten::details::AllocatorType<Storage>::type>
+   requires(::ten::isDynamicTensor<
+                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+            ::ten::isDenseStorage<Storage>::value)
+[[nodiscard]] auto fill(std::initializer_list<size_type> &&dims, T value) {
+   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   using shape_type = typename tensor_type::shape_type;
+   return fill<tensor_type>(shape_type(std::move(dims)), value);
+}
+
+// zeros<Tensor<...>>()
+template <class T>
+   requires(::ten::isStaticTensor<T>::value &&
+            ::ten::isDenseStorage<typename T::storage_type>::value)
+[[nodiscard]] auto zeros() {
+   using value_type = typename T::value_type;
+   return fill<T>(value_type(0));
+}
+
+// zeros<T, Shape, Order, Storage, Allocator>()
+template <class T, class Shape, StorageOrder Order = defaultOrder,
+          class Storage = DefaultStorage<T, Shape>,
+          class Allocator = typename details::AllocatorType<Storage>::type>
+   requires(::ten::isStaticTensor<
+                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+            ::ten::isDenseStorage<Storage>::value)
+[[nodiscard]] auto zeros() {
+   return zeros<Tensor<T, Shape, Order, Storage, Allocator>>();
+}
+
+// zeros<Tensor<...>>(shape)
+template <class T>
+   requires(::ten::isDynamicTensor<T>::value &&
+            ::ten::isDenseStorage<typename T::storage_type>::value)
+[[nodiscard]] auto zeros(typename T::shape_type &&shape) {
+   using value_type = typename T::value_type;
+   using shape_type = typename T::shape_type;
+   return fill<T>(std::forward<shape_type>(shape), value_type(0));
+}
+
+template <class T>
+   requires(::ten::isDynamicTensor<T>::value &&
+            ::ten::isDenseStorage<typename T::storage_type>::value)
+[[nodiscard]] auto zeros(std::initializer_list<size_type> &&dims) {
+   using shape_type = typename T::shape_type;
+   return zeros<T>(shape_type(std::move(dims)));
+}
+
+// zeros<T, Shape, Order, Storage, Allocator>(shape)
+template <
+    class T, class Shape, StorageOrder Order = defaultOrder,
+    class Storage = ::ten::DefaultStorage<T, Shape>,
+    class Allocator = typename ::ten::details::AllocatorType<Storage>::type>
+   requires(::ten::isDynamicTensor<
+                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+            ::ten::isDenseStorage<Storage>::value)
+[[nodiscard]] auto zeros(Shape &&shape) {
+   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   return zeros<tensor_type>(std::forward<Shape>(shape));
+}
+
+template <
+    class T, class Shape, StorageOrder Order = defaultOrder,
+    class Storage = ::ten::DefaultStorage<T, Shape>,
+    class Allocator = typename ::ten::details::AllocatorType<Storage>::type>
+   requires(::ten::isDynamicTensor<
+                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+            ::ten::isDenseStorage<Storage>::value)
+[[nodiscard]] auto zeros(std::initializer_list<size_type> &&dims) {
+   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   using shape_type = typename tensor_type::shape_type;
+   return zeros<tensor_type>(shape_type(std::move(dims)));
+}
+
+// ones<Tensor<...>>()
+template <class T>
+   requires(::ten::isStaticTensor<T>::value &&
+            ::ten::isDenseStorage<typename T::storage_type>::value)
+[[nodiscard]] auto ones() {
+   using value_type = typename T::value_type;
+   return fill<T>(value_type(1));
+}
+
+// ones<T, Shape, Order, Storage, Allocator>()
+template <class T, class Shape, StorageOrder Order = defaultOrder,
+          class Storage = DefaultStorage<T, Shape>,
+          class Allocator = typename details::AllocatorType<Storage>::type>
+   requires(::ten::isStaticTensor<
+                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+            ::ten::isDenseStorage<Storage>::value)
+[[nodiscard]] auto ones() {
+   return ones<Tensor<T, Shape, Order, Storage, Allocator>>();
+}
+
+// ones<Tensor<...>>(shape)
+template <class T>
+   requires(::ten::isDynamicTensor<T>::value &&
+            ::ten::isDenseStorage<typename T::storage_type>::value)
+[[nodiscard]] auto ones(typename T::shape_type &&shape) {
+   using value_type = typename T::value_type;
+   using shape_type = typename T::shape_type;
+   return fill<T>(std::forward<shape_type>(shape), value_type(1));
+}
+
+template <class T>
+   requires(::ten::isDynamicTensor<T>::value &&
+            ::ten::isDenseStorage<typename T::storage_type>::value)
+[[nodiscard]] auto ones(std::initializer_list<size_type> &&dims) {
+   using shape_type = typename T::shape_type;
+   return ones<T>(shape_type(std::move(dims)));
+}
+
+// ones<T, Shape, Order, Storage, Allocator>(shape)
+template <
+    class T, class Shape, StorageOrder Order = defaultOrder,
+    class Storage = ::ten::DefaultStorage<T, Shape>,
+    class Allocator = typename ::ten::details::AllocatorType<Storage>::type>
+   requires(::ten::isDynamicTensor<
+                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+            ::ten::isDenseStorage<Storage>::value)
+[[nodiscard]] auto ones(Shape &&shape) {
+   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   return ones<tensor_type>(std::forward<Shape>(shape));
+}
+
+template <
+    class T, class Shape, StorageOrder Order = defaultOrder,
+    class Storage = ::ten::DefaultStorage<T, Shape>,
+    class Allocator = typename ::ten::details::AllocatorType<Storage>::type>
+   requires(::ten::isDynamicTensor<
+                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+            ::ten::isDenseStorage<Storage>::value)
+[[nodiscard]] auto ones(std::initializer_list<size_type> &&dims) {
+   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   using shape_type = typename tensor_type::shape_type;
+   return ones<tensor_type>(shape_type(std::move(dims)));
+}
+
+// iota<Tensor<...>>(value)
 template <class T>
    requires(::ten::isStaticTensor<T>::value &&
             ::ten::isDenseStorage<typename T::storage_type>::value)
@@ -579,7 +755,7 @@ template <class T, class Shape, StorageOrder Order = defaultOrder,
    return iota<Tensor<T, Shape, Order, Storage, Allocator>>(value);
 }
 
-// iota - dynamic tensor
+// iota<Tensor<...>>(shape, value)
 template <class T>
    requires(::ten::isDynamicTensor<T>::value &&
             ::ten::isDenseStorage<typename T::storage_type>::value)
@@ -605,6 +781,7 @@ iota(std::initializer_list<size_type> &&dims,
    return iota<T>(shape_type(std::move(dims)), value);
 }
 
+// iota<T, Shape, Order, Storage, Allocator>(shape, value)
 template <
     class T, class Shape, StorageOrder Order = defaultOrder,
     class Storage = ::ten::DefaultStorage<T, Shape>,
