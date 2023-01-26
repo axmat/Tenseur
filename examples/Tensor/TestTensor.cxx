@@ -189,5 +189,56 @@ int main() {
       }
    }
 
+   {
+      cout << "iota static tensor" << endl;
+      auto x = iota<Tensor<float, Shape<10>>>();
+      cout << "x = ";
+      for (size_t i = 0; i < 10; i++) {
+         cout << x[i] << " ";
+      }
+      cout << endl;
+
+      auto y = iota<float, Shape<10>>();
+      cout << "y = ";
+      for (size_t i = 0; i < 10; i++) {
+         cout << y[i] << " ";
+      }
+      cout << endl;
+
+   }
+
+   {
+      cout << "iota dynamic tensor" << endl;
+      auto x = iota<Tensor<float, Shape<2, dynamic>>>(
+         Shape<2, dynamic>({2, 3}));
+      cout << "x = ";
+      for (size_t i = 0; i < 6; i++) {
+         cout << x[i] << " ";
+      }
+      cout << endl;
+
+      auto y = iota<Tensor<float, Shape<2, dynamic>>>({2, 3});
+      cout << "y = ";
+      for (size_t i = 0; i < 6; i++) {
+         cout << y[i] << " ";
+      }
+      cout << endl;
+
+      auto z = iota<float, Shape<2, dynamic>>(Shape<2, dynamic>({2, 3}));
+      cout << "z = ";
+      for (size_t i = 0; i < 6; i++) {
+         cout << z[i] << " ";
+      }
+      cout << endl;
+
+      auto t = iota<float, Shape<2, dynamic>>({2, 3});
+      cout << "t = ";
+      for (size_t i = 0; i < 6; i++) {
+         cout << t[i] << " ";
+      }
+      cout << endl;
+   }
+
+
    return 0;
 }

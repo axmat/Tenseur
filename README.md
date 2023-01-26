@@ -18,16 +18,16 @@ A header only C++20 tensor library [WIP]
 
 ## Example
 ```
-DynamicTensor<float, 1> a({3, 3}), b({3, 3});
-DynamicTensor<float, 1> c({3});
-for (size_t i = 0; i < 3*3; i++) {
-   a[i] = i;
-   b[i] = i;
-}
-for (size_t i = 0; i < 3*3; i++) {
-   c[i] = i;
-}
+#include <Ten/Tensor>
 
-auto e = (a * b) + c;
-auto x = e.eval();
+using namespace ten;
+
+int main() {
+   auto a = iota<float, Shape<3, 3>>();
+   auto b = iota<Tensor<float, Shape<3, 3>>>();
+   auto c = fill<float, Shape<3>>(1.);
+
+   auto e = a * b + c;
+   auto x = e.eval();
+}
 ```

@@ -149,7 +149,6 @@ class ScalarNode : public ScalarOperations<ScalarNode<T>> {
    using scalar_type = Scalar<T>;
    // for std::conditional_t
    using tensor_type = void;
-   using shape_type = void;
 
  private:
    T _value;
@@ -536,10 +535,10 @@ using DynamicTensor = Tensor<T, DynamicShape<Rank>, order, Storage, Allocator>;
 /// \fn fill
 /// Create a tensor filled with value
 template <class T>
-   requires(isTensor<T>::value)
+   requires(::ten::isDenseTensor<T>::value)
 [[nodiscard]] auto fill(typename T::value_type value) {
    T x;
-   for (typename T::size_type i = 0; i < x.size(); i++)
+   for (size_type i = 0; i < x.size(); i++)
       x[i] = value;
    return x;
 }
@@ -547,12 +546,90 @@ template <class T>
 template <class T, class Shape, StorageOrder Order = defaultOrder,
           class Storage = DefaultStorage<T, Shape>,
           class Allocator = typename details::AllocatorType<Storage>::type>
-   requires(isDenseStorage<Storage>::value)
+   requires(
+       ::ten::isDenseTensor<Tensor<T, Shape, Order, Storage, Allocator>>::value)
 [[nodiscard]] auto fill(T value) {
    return fill<Tensor<T, Shape, Order, Storage, Allocator>>(value);
 }
 
-// TODO ones, zeros, iota, cast
+// TODO ones, zeros, cast
+
+// iota - static tensor
+template <class T>
+   requires(::ten::isStaticTensor<T>::value &&
+            ::ten::isDenseStorage<typename T::storage_type>::value)
+[[nodiscard]] auto
+iota(typename T::value_type value = typename T::value_type(0)) {
+   using value_type = typename T::value_type;
+   T x;
+   x[0] = value;
+   for (size_type i = 1; i < x.size(); i++) {
+      x[i] = x[i - 1] + value_type(1);
+   }
+   return x;
+}
+
+template <class T, class Shape, StorageOrder Order = defaultOrder,
+          class Storage = DefaultStorage<T, Shape>,
+          class Allocator = typename details::AllocatorType<Storage>::type>
+   requires(::ten::isStaticTensor<
+                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+            ::ten::isDenseStorage<Storage>::value)
+[[nodiscard]] auto iota(T value = T(0)) {
+   return iota<Tensor<T, Shape, Order, Storage, Allocator>>(value);
+}
+
+// iota - dynamic tensor
+template <class T>
+   requires(::ten::isDynamicTensor<T>::value &&
+            ::ten::isDenseStorage<typename T::storage_type>::value)
+[[nodiscard]] auto
+iota(typename T::shape_type &&shape,
+     typename T::value_type value = typename T::value_type(0)) {
+   using value_type = typename T::value_type;
+   using shape_type = typename T::shape_type;
+   T x(std::forward<shape_type>(shape));
+   x[0] = value;
+   for (size_type i = 1; i < x.size(); i++) {
+      x[i] = x[i - 1] + value_type(1);
+   }
+   return x;
+}
+template <class T>
+   requires(::ten::isDynamicTensor<T>::value &&
+            ::ten::isDenseStorage<typename T::storage_type>::value)
+[[nodiscard]] auto
+iota(std::initializer_list<size_type> &&dims,
+     typename T::value_type value = typename T::value_type(0)) {
+   using shape_type = typename T::shape_type;
+   return iota<T>(shape_type(std::move(dims)), value);
+}
+
+template <
+    class T, class Shape, StorageOrder Order = defaultOrder,
+    class Storage = ::ten::DefaultStorage<T, Shape>,
+    class Allocator = typename ::ten::details::AllocatorType<Storage>::type>
+   requires(::ten::isDynamicTensor<
+                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+            ::ten::isDenseStorage<Storage>::value)
+[[nodiscard]] auto iota(Shape &&shape, T value = T(0)) {
+   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   return iota<tensor_type>(std::forward<Shape>(shape), value);
+}
+
+template <
+    class T, class Shape, StorageOrder Order = defaultOrder,
+    class Storage = ::ten::DefaultStorage<T, Shape>,
+    class Allocator = typename ::ten::details::AllocatorType<Storage>::type>
+   requires(::ten::isDynamicTensor<
+                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+            ::ten::isDenseStorage<Storage>::value)
+[[nodiscard]] auto iota(std::initializer_list<size_type> &&dims,
+                        T value = T(0)) {
+   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   using shape_type = typename tensor_type::shape_type;
+   return iota<tensor_type>(shape_type(std::move(dims)), value);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Functions
