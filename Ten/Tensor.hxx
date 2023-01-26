@@ -529,6 +529,11 @@ template <typename T, size_type Rank, StorageOrder order = defaultOrder,
           typename Allocator = typename Storage::allocator_type>
 using DynamicTensor = Tensor<T, DynamicShape<Rank>, order, Storage, Allocator>;
 
+// Static tensor
+// FIXME Order?
+// template <typename T, size_type...dims>
+// using StaticTensor = Tensor<T, Shape<dims...>>;
+
 ////////////////////////////////////////////////////////////////////////////////
 // Functions for creating a new tensor
 
@@ -806,6 +811,47 @@ template <
    using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
    using shape_type = typename tensor_type::shape_type;
    return iota<tensor_type>(shape_type(std::move(dims)), value);
+}
+
+// fill, ones, zeros and iota for default float tensors
+template <class T, size_type... dims>
+[[nodiscard]] auto fill(T value) -> Tensor<T, Shape<dims...>> {
+   using tensor_type = Tensor<T, Shape<dims...>>;
+   return fill<tensor_type>(value);
+}
+template <size_type... dims>
+[[nodiscard]] auto fill(float value) -> Tensor<float, Shape<dims...>> {
+   return fill<float, dims...>(value);
+}
+
+template <class T, size_type... dims>
+[[nodiscard]] auto zeros() -> Tensor<T, Shape<dims...>> {
+   using tensor_type = Tensor<T, Shape<dims...>>;
+   return zeros<tensor_type>();
+}
+template <size_type... dims>
+[[nodiscard]] auto zeros() -> Tensor<float, Shape<dims...>> {
+   return zeros<float, dims...>();
+}
+
+template <class T, size_type... dims>
+[[nodiscard]] auto ones() -> Tensor<T, Shape<dims...>> {
+   using tensor_type = Tensor<T, Shape<dims...>>;
+   return ones<tensor_type>();
+}
+template <size_type... dims>
+[[nodiscard]] auto ones() -> Tensor<float, Shape<dims...>> {
+   return ones<float, dims...>();
+}
+
+template <class T, size_type... dims>
+[[nodiscard]] auto iota(T value = T(0)) -> Tensor<T, Shape<dims...>> {
+   using tensor_type = Tensor<T, Shape<dims...>>;
+   return iota<tensor_type>(value);
+}
+template <size_type... dims>
+[[nodiscard]] auto iota(float value = 0.) -> Tensor<float, Shape<dims...>> {
+   return iota<float, dims...>(value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -208,8 +208,8 @@ int main() {
 
    {
       cout << "fill dynamic tensor" << endl;
-      auto x = fill<Tensor<float, Shape<2, dynamic>>>(
-         Shape<2, dynamic>({2, 3}), 3.);
+      auto x =
+          fill<Tensor<float, Shape<2, dynamic>>>(Shape<2, dynamic>({2, 3}), 3.);
       cout << "x = ";
       for (size_t i = 0; i < 6; i++) {
          cout << x[i] << " ";
@@ -223,8 +223,7 @@ int main() {
       }
       cout << endl;
 
-      auto z = fill<float, Shape<2, dynamic>>(Shape<2, dynamic>({2, 3}),
-         3.);
+      auto z = fill<float, Shape<2, dynamic>>(Shape<2, dynamic>({2, 3}), 3.);
       cout << "z = ";
       for (size_t i = 0; i < 6; i++) {
          cout << z[i] << " ";
@@ -238,7 +237,6 @@ int main() {
       }
       cout << endl;
    }
-
 
    {
       cout << "zeros static tensor" << endl;
@@ -259,8 +257,8 @@ int main() {
 
    {
       cout << "zeros dynamic tensor" << endl;
-      auto x = zeros<Tensor<float, Shape<2, dynamic>>>(
-         Shape<2, dynamic>({2, 3}));
+      auto x =
+          zeros<Tensor<float, Shape<2, dynamic>>>(Shape<2, dynamic>({2, 3}));
       cout << "x = ";
       for (size_t i = 0; i < 6; i++) {
          cout << x[i] << " ";
@@ -308,8 +306,8 @@ int main() {
 
    {
       cout << "ones dynamic tensor" << endl;
-      auto x = ones<Tensor<float, Shape<2, dynamic>>>(
-         Shape<2, dynamic>({2, 3}));
+      auto x =
+          ones<Tensor<float, Shape<2, dynamic>>>(Shape<2, dynamic>({2, 3}));
       cout << "x = ";
       for (size_t i = 0; i < 6; i++) {
          cout << x[i] << " ";
@@ -353,13 +351,12 @@ int main() {
          cout << y[i] << " ";
       }
       cout << endl;
-
    }
 
    {
       cout << "iota dynamic tensor" << endl;
-      auto x = iota<Tensor<float, Shape<2, dynamic>>>(
-         Shape<2, dynamic>({2, 3}));
+      auto x =
+          iota<Tensor<float, Shape<2, dynamic>>>(Shape<2, dynamic>({2, 3}));
       cout << "x = ";
       for (size_t i = 0; i < 6; i++) {
          cout << x[i] << " ";
@@ -388,6 +385,36 @@ int main() {
       cout << endl;
    }
 
+   {
+      cout << "fill, zeros, ones and iota for default float tensors" << endl;
+      auto x = fill<2, 5>(3.);
+      cout << "x = ";
+      for (size_t i = 0; i < 10; i++) {
+         cout << x[i] << " ";
+      }
+      cout << endl;
+
+      auto y = zeros<2, 5>();
+      cout << "y = ";
+      for (size_t i = 0; i < 10; i++) {
+         cout << y[i] << " ";
+      }
+      cout << endl;
+
+      auto z = ones<2, 5>();
+      cout << "z = ";
+      for (size_t i = 0; i < 10; i++) {
+         cout << z[i] << " ";
+      }
+      cout << endl;
+
+      auto t = iota<2, 5>();
+      cout << "t = ";
+      for (size_t i = 0; i < 10; i++) {
+         cout << t[i] << " ";
+      }
+      cout << endl;
+   }
 
    return 0;
 }
