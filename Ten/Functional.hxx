@@ -99,8 +99,25 @@ template <class T, class R = typename T::scalarnode_type> struct Max {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Binary functions (Add, Sub, Mul and Div)
+namespace details {
+template <class, class> struct CommonType;
 
-template <class A, class B, class C = std::common_type_t<A, B>> struct Add {
+template <VectorNode A, VectorNode B>
+   requires SameShape<A, B> && SameStorageOrder<A, B> && SameStorage<A, B> &&
+            SameAllocator<A, B>
+struct CommonType<A, B> {
+   using value_type =
+       std::common_type_t<typename A::value_type, typename B::value_type>;
+   using type =
+       TensorNode<value_type, typename A::shape_type, A::storageOrder(),
+                  typename A::storage_type, typename A::allocator_type>;
+};
+
+template <class A, class B>
+using common_type_t = typename CommonType<A, B>::type;
+} // namespace details
+
+template <class A, class B, class C = details::common_type_t<A, B>> struct Add {
    static_assert(A::isVector() && B::isVector(),
                  "Expected A and B to be vectors.");
 
@@ -134,7 +151,7 @@ template <class A, class B, class C = std::common_type_t<A, B>> struct Add {
    }
 };
 
-template <class A, class B, class C = std::common_type_t<A, B>> struct Sub {
+template <class A, class B, class C = details::common_type_t<A, B>> struct Sub {
    static_assert(A::isVector() && B::isVector(),
                  "Expected A and B to be vectors.");
 
@@ -164,7 +181,7 @@ template <class A, class B, class C = std::common_type_t<A, B>> struct Sub {
    }
 };
 
-template <class A, class B, class C = std::common_type_t<A, B>> struct Div {
+template <class A, class B, class C = details::common_type_t<A, B>> struct Div {
    static_assert(A::isVector() && B::isVector(),
                  "Expected A and B to be vectors.");
 
@@ -197,7 +214,7 @@ template <class A, class B, class C = std::common_type_t<A, B>> struct Div {
 namespace details {
 template <class, class> struct MulResult;
 
-// vector - vector
+// vector * vector
 template <VectorNode A, VectorNode B>
    requires SameShape<A, B> && SameStorageOrder<A, B> && SameStorage<A, B> &&
             SameAllocator<A, B>
@@ -209,7 +226,7 @@ struct MulResult<A, B> {
                   typename A::storage_type, typename A::allocator_type>;
 };
 
-// matrix - matrix
+// matrix * matrix
 template <MatrixNode A, MatrixNode B>
    requires SameStorageOrder<A, B> && SameStorage<A, B> && SameAllocator<A, B>
 struct MulResult<A, B> {
@@ -222,8 +239,8 @@ struct MulResult<A, B> {
                            typename A::allocator_type>;
 };
 
-// scalar - tensor
-template <ScalarNodeConcept A, TensorNodeConcept B> struct MulResult<A, B> {
+// scalar * tensor
+template <traits::ScalarNode A, traits::TensorNode B> struct MulResult<A, B> {
    using type = B;
 };
 
@@ -232,7 +249,7 @@ template <ScalarNodeConcept A, TensorNodeConcept B> struct MulResult<A, B> {
 template <class A, class B, class C = typename details::MulResult<A, B>::type>
 struct Mul;
 
-// vector - vector
+// vector * vector
 template <VectorNode A, VectorNode B, VectorNode C> struct Mul<A, B, C> {
    using left_input_type = A;
    using right_input_type = B;
@@ -262,7 +279,7 @@ template <VectorNode A, VectorNode B, VectorNode C> struct Mul<A, B, C> {
    }
 };
 
-// matrix - matrix
+// matrix * matrix
 template <MatrixNode A, MatrixNode B, MatrixNode C> struct Mul<A, B, C> {
    using left_input_type = A;
    using right_input_type = B;
@@ -286,8 +303,8 @@ template <MatrixNode A, MatrixNode B, MatrixNode C> struct Mul<A, B, C> {
    }
 };
 
-// scalar - tensor
-template <ScalarNodeConcept A, TensorNodeConcept B, TensorNodeConcept C>
+// scalar * tensor
+template <traits::ScalarNode A, traits::TensorNode B, traits::TensorNode C>
 struct Mul<A, B, C> {
    using left_input_type = A;
    using right_input_type = B;

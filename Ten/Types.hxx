@@ -232,14 +232,14 @@ template <class> struct isBinaryExpr : std::false_type {};
 template <class L, class R, template <typename...> class Func, typename... Args>
 struct isBinaryExpr<BinaryExpr<L, R, Func, Args...>> : std::true_type {};
 
+namespace traits {
 // Concepts
-// FIXME Better names??
 template <typename T>
-concept ScalarNodeConcept = isScalarNode<T>::value;
+concept ScalarNode = isScalarNode<T>::value;
 
 template <typename T>
-concept TensorNodeConcept = isTensorNode<T>::value;
-
+concept TensorNode = isTensorNode<T>::value;
+} // namespace traits
 } // namespace ten
 
 namespace ten::stack {
