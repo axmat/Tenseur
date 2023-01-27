@@ -370,6 +370,14 @@ class TensorNode
       requires(Shape::isStatic())
        : _storage(storage) {}
 
+   // Construct a TensoNode from storage
+   // FIXME Check size
+   explicit TensorNode(const std::shared_ptr<Storage> &storage,
+                       const Shape &shape) noexcept
+      requires(Shape::isDynamic())
+       : _storage(storage), _shape(shape),
+         _stride(typename base_type::stride_type(_shape.value())) {}
+
    [[nodiscard]] size_type dim(size_type index) const {
       return _shape.value().dim(index);
    }
@@ -559,7 +567,7 @@ using DynamicTensor = Tensor<T, DynamicShape<Rank>, order, Storage, Allocator>;
 template <class Shape, class T>
    requires(::ten::isStaticTensor<T>::value && Shape::isStatic() &&
             Shape::staticSize() == T::staticSize())
-[[nodiscard]] auto reshape(T &x) {
+[[nodiscard]] auto reshape(const T &x) {
    using node_type =
        TensorNode<typename T::value_type, Shape, T::storageOrder(),
                   typename T::storage_type, typename T::allocator_type>;
@@ -576,6 +584,28 @@ template <size_t... dims, class T>
 [[nodiscard]] auto reshape(T &x) {
    using shape_type = ::ten::Shape<dims...>;
    return reshape<shape_type>(x);
+}
+
+// reshape(x, shape)
+template <class T, class Shape>
+   requires(::ten::isDynamicTensor<T>::value)
+[[nodiscard]] auto reshape(const T &x, Shape &&shape) {
+   using node_type =
+       TensorNode<typename T::value_type, Shape, T::storageOrder(),
+                  typename T::storage_type, typename T::allocator_type>;
+   using tensor_type =
+       Tensor<typename T::value_type, Shape, T::storageOrder(),
+              typename T::storage_type, typename T::allocator_type>;
+   auto node = std::make_shared<node_type>(x.storage(), shape);
+   return tensor_type(node);
+}
+
+template <size_t Rank, class T>
+   requires(::ten::isDynamicTensor<T>::value)
+[[nodiscard]] auto reshape(const T &x,
+                           std::initializer_list<size_type> &&dims) {
+   using shape_type = DynamicShape<Rank>;
+   return reshape(x, shape_type(std::move(dims)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

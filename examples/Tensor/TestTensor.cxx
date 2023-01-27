@@ -424,7 +424,7 @@ int main() {
    }
 
    {
-      cout << "Reshape" << endl;
+      cout << "Reshape static tensor" << endl;
       auto x = iota<2, 3>();
       auto y = reshape<Shape<3, 2>>(x);
       printTensor(x);
@@ -434,6 +434,20 @@ int main() {
       printTensor(y);
 
       auto z = reshape<3, 2>(x);
+      printTensor(z);
+   }
+
+   {
+      cout << "Reshape dynamic tensor" << endl;
+      auto x = iota<DynamicTensor<float, 2>>({2, 3});
+      auto y = reshape(x, Shape<dynamic, dynamic>({3, 2}));
+      printTensor(x);
+      printTensor(y);
+      y[1] = 99.;
+      printTensor(x);
+      printTensor(y);
+
+      auto z = reshape<2>(x, {3, 2});
       printTensor(z);
    }
 
