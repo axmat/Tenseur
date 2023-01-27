@@ -45,6 +45,21 @@ float dot(const int n, const float *x, const int incx, const float *y,
    return cblas_sdot(n, x, incx, y, incy);
 }
 
+// Vector matrix multiplication
+// y = alpha * a * x + beta * y
+template <typename T>
+static void gemv(transop trans, const int m, const int n, const T alpha,
+                 const T *a, const int lda, const T *x, const int incx,
+                 const T beta, float *y, int incy);
+
+template <>
+void gemv(transop trans, const int m, const int n, const float alpha,
+          const float *a, const int lda, const float *x, const int incx,
+          const float beta, float *y, const int incy) {
+   cblas_sgemv(CBLAS_ORDER::CblasColMajor, cast(trans), m, n, alpha, a, lda, x,
+               incx, beta, y, incy);
+}
+
 // General matrix multiplication
 // c = alpha * a * b + beta * c
 template <typename T>

@@ -76,17 +76,25 @@ template <typename Scalar, typename Shape, StorageOrder order, typename Storage,
           typename Allocator>
 class Tensor;
 
-/*template<typename T>
-using isTensor = std::is_same<T,
-   Tensor<typename T::ScalarType, typename T::ShapeType,
-      T::GetStorageOrder(), typename T::AllocatorType,
-      typename T::StorageType, T::IsShort()>>;*/
-
 template <typename> struct isTensor : std::false_type {};
 template <typename Scalar, typename Shape, StorageOrder order, typename Storage,
           typename Allocator>
 struct isTensor<Tensor<Scalar, Shape, order, Storage, Allocator>> {
    static constexpr bool value = true;
+};
+
+template <typename> struct isVector : std::false_type {};
+template <typename Scalar, typename Shape, StorageOrder order, typename Storage,
+          typename Allocator>
+struct isVector<Tensor<Scalar, Shape, order, Storage, Allocator>> {
+   static constexpr bool value = Shape::rank() == 1;
+};
+
+template <typename> struct isMatrix : std::false_type {};
+template <typename Scalar, typename Shape, StorageOrder order, typename Storage,
+          typename Allocator>
+struct isMatrix<Tensor<Scalar, Shape, order, Storage, Allocator>> {
+   static constexpr bool value = Shape::rank() == 2;
 };
 
 // Dynamic tensor

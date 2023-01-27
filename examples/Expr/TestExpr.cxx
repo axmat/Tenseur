@@ -157,6 +157,37 @@ int main() {
    }
 
    {
+      cout << "Binary expr matrix * vector" << std::endl;
+      DynamicTensor<float, 2> a({2, 3});
+      DynamicTensor<float, 1> b({3});
+      for (size_t i = 0; i < 2 * 3; i++) {
+         a[i] = i;
+      }
+      for (size_t i = 0; i < 3; i++) {
+         b[i] = i;
+      }
+      auto c = (a * b).eval();
+      cout << "A = \n";
+      for (size_t i = 0; i < 2; i++) {
+         for (size_t j = 0; j < 3; j++) {
+            std::cout << a(i, j) << " ";
+         }
+         cout << endl;
+      }
+      cout << "B = \n";
+      for (size_t j = 0; j < 3; j++) {
+         std::cout << b[j] << " ";
+      }
+      cout << endl;
+      cout << "C = \n";
+      for (size_t j = 0; j < 2; j++) {
+         std::cout << c[j] << " ";
+      }
+      cout << endl;
+      static_assert(std::is_same_v<decltype(c), DynamicTensor<float, 1>>);
+   }
+
+   {
       cout << "Binary expr alpha * a" << std::endl;
       DynamicTensor<float, 1> a({5});
       for (size_t i = 0; i < 5; i++) {

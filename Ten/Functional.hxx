@@ -199,6 +199,18 @@ struct MulResult<A, B> {
                            typename A::allocator_type>;
 };
 
+// matrix * vector
+template <MatrixNode A, VectorNode B>
+   requires SameStorageOrder<A, B> && SameStorage<A, B> && SameAllocator<A, B>
+struct MulResult<A, B> {
+   using value_type =
+       std::common_type_t<typename A::value_type, typename B::value_type>;
+   using type =
+       TensorNode<value_type, Shape<A::shape_type::template staticDim<0>()>,
+                  A::storageOrder(), typename A::storage_type,
+                  typename A::allocator_type>;
+};
+
 // scalar * tensor
 template <traits::ScalarNode A, traits::TensorNode B> struct MulResult<A, B> {
    using type = B;
@@ -254,6 +266,31 @@ template <MatrixNode A, MatrixNode B, MatrixNode C> struct Mul<A, B, C> {
    static constexpr output_shape_type
    outputShape(const left_shape_type &left, const right_shape_type &right) {
       std::initializer_list<size_type> &&dims = {left.dim(0), right.dim(1)};
+      output_shape_type s(std::move(dims));
+      return s;
+   }
+
+   static constexpr void call(const A &left, const B &right, C &result) {
+      kernels::mul(left, right, result);
+   }
+};
+
+// matrix * vector
+template <MatrixNode A, VectorNode B, VectorNode C> struct Mul<A, B, C> {
+   using left_input_type = A;
+   using right_input_type = B;
+   using output_type = C;
+
+   using left_shape_type = typename A::shape_type;
+   using right_shape_type = typename B::shape_type;
+   using output_shape_type = typename C::shape_type;
+
+   static constexpr bool isParametric() { return false; }
+
+   static constexpr output_shape_type
+   outputShape(const left_shape_type &left, const right_shape_type &right) {
+      // FIXME transposed
+      std::initializer_list<size_type> &&dims = {left.dim(0)};
       output_shape_type s(std::move(dims));
       return s;
    }
