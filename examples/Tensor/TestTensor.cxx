@@ -5,6 +5,13 @@
 #include <memory>
 #include <type_traits>
 
+template <class T> void printTensor(const T &val) {
+   std::cout << "[";
+   for (size_t i = 0; i < val.size(); i++)
+      std::cout << val[i] << " ";
+   std::cout << "]\n";
+}
+
 int main() {
    using namespace ten;
    using namespace std;
@@ -414,6 +421,20 @@ int main() {
          cout << t[i] << " ";
       }
       cout << endl;
+   }
+
+   {
+      cout << "Reshape" << endl;
+      auto x = iota<2, 3>();
+      auto y = reshape<Shape<3, 2>>(x);
+      printTensor(x);
+      printTensor(y);
+      y[1] = 99.;
+      printTensor(x);
+      printTensor(y);
+
+      auto z = reshape<3, 2>(x);
+      printTensor(z);
    }
 
    return 0;

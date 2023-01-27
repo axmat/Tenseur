@@ -302,7 +302,7 @@ class TensorNode
    /// optional stride (only for dynamic tensors)
    std::optional<stride_type> _stride;
    /// Storage
-   Storage _storage;
+   std::shared_ptr<Storage> _storage = nullptr;
    /// Is transposed
    bool _transposed = false;
 
@@ -314,16 +314,16 @@ class TensorNode
       constexpr size_type n = sizeof...(tail);
       static_assert(n == 0 || n == (rank - 1), "Invalid number of indices.");
       if constexpr (rank == 1) {
-         return _storage[index];
+         return (*_storage.get())[index];
       }
       std::array<size_type, Shape::rank()> indices{
           index, static_cast<size_type>(tail)...};
       if constexpr (Shape::isDynamic()) {
          size_type idx = details::linearIndex(_stride.value(), indices);
-         return _storage[idx];
+         return (*_storage.get())[idx];
       } else {
          size_type idx = details::staticLinearIndex<stride_type>(indices);
-         return _storage[idx];
+         return (*_storage.get())[idx];
       }
    }
 
@@ -334,16 +334,16 @@ class TensorNode
       constexpr size_type n = sizeof...(tail);
       static_assert(n == 0 || n == (rank - 1), "Invalid number of indices.");
       if constexpr (rank == 1) {
-         return _storage[index];
+         return (*_storage.get())[index];
       }
       std::array<size_type, Shape::rank()> indices{
           index, static_cast<size_type>(tail)...};
       if constexpr (Shape::isDynamic()) {
          size_type idx = details::linearIndex(_stride.value(), indices);
-         return _storage[idx];
+         return (*_storage.get())[idx];
       } else {
          size_type idx = details::staticLinearIndex<stride_type>(indices);
-         return _storage[idx];
+         return (*_storage.get())[idx];
       }
    }
 
@@ -351,18 +351,24 @@ class TensorNode
    /// Construct a static TensorNode
    TensorNode() noexcept
       requires(Shape::isStatic())
-       : _shape(std::nullopt), _stride(std::nullopt), _storage(Storage()) {}
+       : _shape(std::nullopt), _stride(std::nullopt), _storage(new Storage()) {}
 
    /// Construct a TensorNode from a list of shape
    explicit TensorNode(std::initializer_list<size_type> &&shape) noexcept
       requires(Shape::isDynamic())
-       : _shape(std::move(shape)), _storage(Storage(_shape.value().size())),
+       : _shape(std::move(shape)), _storage(new Storage(_shape.value().size())),
          _stride(typename base_type::stride_type(_shape.value())) {}
 
    /// Construct a TensorNode from the shape
    explicit TensorNode(const Shape &shape) noexcept
-       : _shape(shape), _storage(shape.size()),
+      requires(Shape::isDynamic())
+       : _shape(shape), _storage(new Storage(shape.size())),
          _stride(typename base_type::stride_type(_shape.value())) {}
+
+   // Construct a TensoNode from storage
+   explicit TensorNode(const std::shared_ptr<Storage> &storage) noexcept
+      requires(Shape::isStatic())
+       : _storage(storage) {}
 
    [[nodiscard]] size_type dim(size_type index) const {
       return _shape.value().dim(index);
@@ -378,10 +384,12 @@ class TensorNode
 
    [[nodiscard]] const Shape &shape() const { return _shape.value(); }
 
-   [[nodiscard]] T *data() { return _storage.data(); }
-   [[nodiscard]] const T *data() const { return _storage.data(); }
+   [[nodiscard]] T *data() { return _storage.get()->data(); }
+   [[nodiscard]] const T *data() const { return _storage.get()->data(); }
 
    [[nodiscard]] bool isTransposed() const { return _transposed; }
+
+   [[nodiscard]] std::shared_ptr<Storage> storage() const { return _storage; }
 
    /// Overloading the [] operator
    [[nodiscard]] inline const typename base_type::value_type &
@@ -502,6 +510,10 @@ class Tensor final
    [[nodiscard]] const T *data() const { return _node.get()->data(); }
    [[nodiscard]] T *data() { return _node.get()->data(); }
 
+   [[nodiscard]] std::shared_ptr<Storage> storage() const {
+      return _node.get()->storage();
+   }
+
    /// Overloading the [] operator
    [[nodiscard]] inline const typename base_type::value_type &
    operator[](size_type index) const noexcept {
@@ -539,6 +551,32 @@ using DynamicTensor = Tensor<T, DynamicShape<Rank>, order, Storage, Allocator>;
 // FIXME Order?
 // template <typename T, size_type...dims>
 // using StaticTensor = Tensor<T, Shape<dims...>>;
+
+////////////////////////////////////////////////////////////////////////////////
+// Basic functions
+
+// reshape<Shape>(x)
+template <class Shape, class T>
+   requires(::ten::isStaticTensor<T>::value && Shape::isStatic() &&
+            Shape::staticSize() == T::staticSize())
+[[nodiscard]] auto reshape(T &x) {
+   using node_type =
+       TensorNode<typename T::value_type, Shape, T::storageOrder(),
+                  typename T::storage_type, typename T::allocator_type>;
+   using tensor_type =
+       Tensor<typename T::value_type, Shape, T::storageOrder(),
+              typename T::storage_type, typename T::allocator_type>;
+   auto node = std::make_shared<node_type>(x.storage());
+   return tensor_type(node);
+}
+
+// reshape<dims...>(x)
+template <size_t... dims, class T>
+   requires(::ten::isStaticTensor<T>::value)
+[[nodiscard]] auto reshape(T &x) {
+   using shape_type = ::ten::Shape<dims...>;
+   return reshape<shape_type>(x);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions for creating a new tensor
