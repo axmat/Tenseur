@@ -23,10 +23,10 @@ A header only C++20 tensor library [WIP]
 using namespace ten;
 
 int main() {
-   auto a = iota<float, Shape<3, 3>>();
-   auto b = iota<Tensor<float, Shape<3, 3>>>();
-   auto c = ones<float, Shape<3>>();
+   auto a = iota<Matrix<float>>({3, 3});
+   auto b = iota<Matrix<float>>({3, 3});
+   auto c = ones<Vector<float>>(3);
 
-   StaticVector<float, 3> x = a * b + c;
+   Vector<float> x = a * b + c;
 }
 ```
