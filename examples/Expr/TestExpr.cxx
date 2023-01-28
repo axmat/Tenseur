@@ -235,5 +235,20 @@ int main() {
       printTensor(d);
    }
 
+   {
+      cout << "Tensor from unary expr" << std::endl;
+      auto a = iota<5>();
+      Tensor<float, Shape<5>> b = sqrt(a);
+      printTensor(b);
+   }
+
+   {
+      cout << "Tensor from binary expr" << std::endl;
+      auto a = iota<5>();
+      auto b = iota<5>();
+      Tensor<float, Shape<5>> d = a + b;
+      printTensor(d);
+   }
+
    return 0;
 }

@@ -290,7 +290,7 @@ class TensorNode
    using base_type = TensorOperations<T, Shape, Order, Allocator, Storage>;
 
    /// Tensor type
-   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator, void>;
 
    using scalarnode_type = ScalarNode<T>;
 
@@ -435,7 +435,8 @@ struct AllocatorType<::ten::StaticDenseStorage<T, Shape>> {
 /// Tensor represented by a multidimentional array.
 template <typename T, typename Shape, StorageOrder Order = defaultOrder,
           typename Storage = DefaultStorage<T, Shape>,
-          typename Allocator = typename details::AllocatorType<Storage>::type>
+          typename Allocator = typename details::AllocatorType<Storage>::type,
+          typename E = void>
 class Tensor final
     : public Expr<Tensor<T, Shape, Order, Storage, Allocator>>,
       public TensorOperations<T, Shape, Order, Storage, Allocator> {
@@ -464,7 +465,7 @@ class Tensor final
  private:
    /// Shared pointer to the node
    // TODO Slice / View / or TilledTensor
-   std::shared_ptr<node_type> _node;
+   std::shared_ptr<node_type> _node = nullptr;
 
  public:
    /// Constructor for static Tensor
@@ -484,6 +485,15 @@ class Tensor final
    /// Constructor of Tensor from a shared pointer to TensorNode
    Tensor(const std::shared_ptr<node_type> &node) : _node(node) {}
 
+   /// Asignment from an expression
+   /// FIXME convert from any compatible output type
+   template <class Expr>
+      requires(::ten::isUnaryExpr<std::remove_cvref_t<Expr>>::value ||
+               ::ten::isBinaryExpr<std::remove_cvref_t<Expr>>::value)
+   Tensor(Expr &&expr) {
+      _node = expr.eval().node();
+   }
+
    /// Assignment operator
    Tensor(const Tensor &t) { _node = t._node; }
 
@@ -493,7 +503,6 @@ class Tensor final
       _node = t._node;
       return *this;
    }
-
    Tensor &operator=(Tensor &&t) = default;
 
    // TODO Iterators

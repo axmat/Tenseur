@@ -73,43 +73,43 @@ struct TensorNode;
 
 // Forward declaration of tensor type
 template <typename Scalar, typename Shape, StorageOrder order, typename Storage,
-          typename Allocator>
+          typename Allocator, typename Expr>
 class Tensor;
 
 template <typename> struct isTensor : std::false_type {};
 template <typename Scalar, typename Shape, StorageOrder order, typename Storage,
-          typename Allocator>
-struct isTensor<Tensor<Scalar, Shape, order, Storage, Allocator>> {
+          typename Allocator, typename Expr>
+struct isTensor<Tensor<Scalar, Shape, order, Storage, Allocator, Expr>> {
    static constexpr bool value = true;
 };
 
 template <typename> struct isVector : std::false_type {};
 template <typename Scalar, typename Shape, StorageOrder order, typename Storage,
-          typename Allocator>
-struct isVector<Tensor<Scalar, Shape, order, Storage, Allocator>> {
+          typename Allocator, typename E>
+struct isVector<Tensor<Scalar, Shape, order, Storage, Allocator, E>> {
    static constexpr bool value = Shape::rank() == 1;
 };
 
 template <typename> struct isMatrix : std::false_type {};
 template <typename Scalar, typename Shape, StorageOrder order, typename Storage,
-          typename Allocator>
-struct isMatrix<Tensor<Scalar, Shape, order, Storage, Allocator>> {
+          typename Allocator, typename E>
+struct isMatrix<Tensor<Scalar, Shape, order, Storage, Allocator, E>> {
    static constexpr bool value = Shape::rank() == 2;
 };
 
 // Dynamic tensor
 template <typename> struct isDynamicTensor : std::false_type {};
 template <typename Scalar, typename Shape, StorageOrder order, typename Storage,
-          typename Allocator>
-struct isDynamicTensor<Tensor<Scalar, Shape, order, Allocator, Storage>> {
+          typename Allocator, typename E>
+struct isDynamicTensor<Tensor<Scalar, Shape, order, Allocator, Storage, E>> {
    static constexpr bool value = Shape::isDynamic();
 };
 
 // Static tensor
 template <typename> struct isStaticTensor : std::false_type {};
 template <typename Scalar, typename Shape, StorageOrder order, typename Storage,
-          typename Allocator>
-struct isStaticTensor<Tensor<Scalar, Shape, order, Storage, Allocator>> {
+          typename Allocator, typename E>
+struct isStaticTensor<Tensor<Scalar, Shape, order, Storage, Allocator, E>> {
    static constexpr bool value = Shape::isStatic();
 };
 
@@ -142,8 +142,8 @@ using DefaultStorage =
 // Dense
 template <class> struct isDenseTensor : std::false_type {};
 template <typename Scalar, typename Shape, StorageOrder order, typename Storage,
-          typename Allocator>
-struct isDenseTensor<Tensor<Scalar, Shape, order, Storage, Allocator>> {
+          typename Allocator, typename E>
+struct isDenseTensor<Tensor<Scalar, Shape, order, Storage, Allocator, E>> {
    static constexpr bool value = isDenseStorage<Storage>::value;
 };
 
