@@ -181,7 +181,7 @@ class Scalar : public Expr<Scalar<T>>, public ScalarOperations<Scalar<T>> {
    using node_type = ScalarNode<T>;
 
  private:
-   std::shared_ptr<node_type> _node;
+   std::shared_ptr<node_type> _node = nullptr;
 
  public:
    explicit Scalar(const T &value)
@@ -190,6 +190,14 @@ class Scalar : public Expr<Scalar<T>>, public ScalarOperations<Scalar<T>> {
        : _node(std::make_shared<node_type>(std::move(value))) {}
 
    explicit Scalar(std::shared_ptr<node_type> node) : _node(node) {}
+
+   /// Asignment from an expression
+   template <class Expr>
+      requires(::ten::isUnaryExpr<std::remove_cvref_t<Expr>>::value ||
+               ::ten::isBinaryExpr<std::remove_cvref_t<Expr>>::value)
+   Scalar(Expr &&expr) {
+      _node = expr.eval().node();
+   }
 
    const T &value() const { return _node.get()->value(); }
 
@@ -290,7 +298,7 @@ class TensorNode
    using base_type = TensorOperations<T, Shape, Order, Allocator, Storage>;
 
    /// Tensor type
-   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator, void>;
+   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
 
    using scalarnode_type = ScalarNode<T>;
 
@@ -433,10 +441,9 @@ struct AllocatorType<::ten::StaticDenseStorage<T, Shape>> {
 /// \class Tensor
 ///
 /// Tensor represented by a multidimentional array.
-template <typename T, typename Shape, StorageOrder Order = defaultOrder,
-          typename Storage = DefaultStorage<T, Shape>,
-          typename Allocator = typename details::AllocatorType<Storage>::type,
-          typename E = void>
+template <class T, class Shape, StorageOrder Order = defaultOrder,
+          class Storage = DefaultStorage<T, Shape>,
+          class Allocator = details::AllocatorType<Storage>::type>
 class Tensor final
     : public Expr<Tensor<T, Shape, Order, Storage, Allocator>>,
       public TensorOperations<T, Shape, Order, Storage, Allocator> {
