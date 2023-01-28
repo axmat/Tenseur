@@ -557,6 +557,18 @@ class Tensor final
    }
 };
 
+// vector<T>
+template <typename T, StorageOrder order = defaultOrder,
+          typename Storage = DefaultStorage<T, Shape<::ten::dynamic>>,
+          typename Allocator = typename Storage::allocator_type>
+using Vector = Tensor<T, Shape<::ten::dynamic>, order, Storage, Allocator>;
+
+// StaticVector<T, size>
+template <typename T, size_type Size, StorageOrder order = defaultOrder,
+          typename Storage = DefaultStorage<T, Shape<Size>>,
+          typename Allocator = details::AllocatorType<Storage>::type>
+using StaticVector = Tensor<T, Shape<Size>, order, Storage, Allocator>;
+
 /// \typedef DynamicTensor
 /// Dynamic tensor
 template <typename T, size_type Rank, StorageOrder order = defaultOrder,

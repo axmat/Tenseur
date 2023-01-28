@@ -237,8 +237,8 @@ int main() {
 
    {
       cout << "Tensor from unary expr" << std::endl;
-      auto a = iota<5>();
-      Tensor<float, Shape<5>> b = sqrt(a);
+      auto a = iota<Vector<float>>({5});
+      Vector<float> b = sqrt(a);
       printTensor(b);
    }
 
@@ -246,7 +246,7 @@ int main() {
       cout << "Tensor from binary expr" << std::endl;
       auto a = iota<5>();
       auto b = iota<5>();
-      Tensor<float, Shape<5>> d = a + b;
+      StaticVector<float, 5> d = a + b;
       printTensor(d);
    }
 

@@ -27,7 +27,6 @@ int main() {
    auto b = iota<Tensor<float, Shape<3, 3>>>();
    auto c = ones<float, Shape<3>>();
 
-   auto e = a * b + c;
-   auto x = e.eval();
+   StaticVector<float, 3> x = a * b + c;
 }
 ```
