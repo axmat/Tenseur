@@ -22,7 +22,7 @@ int main() {
 
    {
       cout << "UnaryExpr" << endl;
-      DynamicTensor<float, 1> x({3});
+      Vector<float> x({3});
       for (size_t i = 0; i < 3; i++)
          x[i] = -float(i);
 
@@ -41,7 +41,7 @@ int main() {
 
    {
       cout << "UnaryExpr min" << endl;
-      DynamicTensor<float, 1> x({3});
+      Vector<float> x({3});
       for (size_t i = 0; i < 3; i++)
          x[i] = -float(i + 1.);
       auto e = min(x);
@@ -61,10 +61,9 @@ int main() {
 
    {
       cout << "UnaryExpr sqrt" << endl;
-      DynamicTensor<float, 1> x({3});
+      auto x = iota<Vector<float>>(3);
       for (size_t i = 0; i < 3; i++)
          x[i] = float(i);
-      using Tensor_t = DynamicTensor<float, 1>;
       auto e = sqrt(x);
       auto out = e.eval();
 
@@ -81,13 +80,8 @@ int main() {
 
    {
       cout << "Binary expr a + b" << std::endl;
-      DynamicTensor<float, 1> a({3});
-      DynamicTensor<float, 1> b({3});
-      for (size_t i = 0; i < 3; i++) {
-         a[i] = i;
-         b[i] = i;
-      }
-
+      auto a = iota<Vector<float>>(3);
+      auto b = iota<Vector<float>>(3);
       auto c = a + b;
       auto res = c.eval();
       printTensor(a);
@@ -97,8 +91,8 @@ int main() {
 
    {
       cout << "Binary expr a - b" << std::endl;
-      DynamicTensor<float, 1> a({3});
-      DynamicTensor<float, 1> b({3});
+      Vector<float> a({3});
+      Vector<float> b({3});
       for (size_t i = 0; i < 3; i++) {
          a[i] = i;
          b[i] = i + 1;
@@ -110,12 +104,8 @@ int main() {
 
    {
       cout << "Binary expr a * b" << std::endl;
-      DynamicTensor<float, 1> a({6});
-      DynamicTensor<float, 1> b({6});
-      for (size_t i = 0; i < 6; i++) {
-         a[i] = i;
-         b[i] = i;
-      }
+      auto a = iota<Vector<float>>(6);
+      auto b = iota<Vector<float>>(6);
       auto c = (a * b).eval();
       printTensor(c);
       static_assert(std::is_same_v<decltype(c), DynamicTensor<float, 1>>);
@@ -123,14 +113,8 @@ int main() {
 
    {
       cout << "Binary expr A * B" << std::endl;
-      DynamicTensor<float, 2> a({2, 3});
-      DynamicTensor<float, 2> b({3, 4});
-      for (size_t i = 0; i < 2 * 3; i++) {
-         a[i] = i;
-      }
-      for (size_t i = 0; i < 3 * 4; i++) {
-         b[i] = i;
-      }
+      auto a = iota<Matrix<float>>({2, 3});
+      auto b = iota<Matrix<float>>({3, 4});
       auto c = (a * b).eval();
       cout << "A = \n";
       for (size_t i = 0; i < 2; i++) {
@@ -158,14 +142,8 @@ int main() {
 
    {
       cout << "Binary expr matrix * vector" << std::endl;
-      DynamicTensor<float, 2> a({2, 3});
-      DynamicTensor<float, 1> b({3});
-      for (size_t i = 0; i < 2 * 3; i++) {
-         a[i] = i;
-      }
-      for (size_t i = 0; i < 3; i++) {
-         b[i] = i;
-      }
+      auto a = iota<Matrix<float>>({2, 3});
+      auto b = iota<Vector<float>>(3);
       auto c = (a * b).eval();
       cout << "A = \n";
       for (size_t i = 0; i < 2; i++) {
@@ -189,10 +167,7 @@ int main() {
 
    {
       cout << "Binary expr alpha * a" << std::endl;
-      DynamicTensor<float, 1> a({5});
-      for (size_t i = 0; i < 5; i++) {
-         a[i] = i;
-      }
+      auto a = iota<Vector<float>>(5);
       auto c = (2. * a).eval();
       printTensor(c);
       static_assert(std::is_same_v<decltype(c), DynamicTensor<float, 1>>);
@@ -200,11 +175,8 @@ int main() {
 
    {
       cout << "Chain binary expressions" << std::endl;
-      DynamicTensor<float, 1> a({5}), b({5});
-      for (size_t i = 0; i < 5; i++) {
-         a[i] = i;
-         b[i] = i;
-      }
+      auto a = iota<Vector<float>>(5);
+      auto b = iota<Vector<float>>(5);
       auto c = a + b;
       // 0 2 4  6  8
       // 0 2 8 18 32
@@ -214,10 +186,7 @@ int main() {
 
    {
       cout << "Chain unary expressions" << std::endl;
-      DynamicTensor<float, 1> a({5});
-      for (size_t i = 0; i < 5; i++) {
-         a[i] = i;
-      }
+      auto a = iota<Vector<float>>(5);
       auto b = sqrt(a);
       auto c = sqrt(b).eval();
       printTensor(c);
@@ -225,10 +194,7 @@ int main() {
 
    {
       cout << "Chain unary and binary expressions" << std::endl;
-      DynamicTensor<float, 1> a({5});
-      for (size_t i = 0; i < 5; i++) {
-         a[i] = i;
-      }
+      auto a = iota<Vector<float>>(5);
       auto b = 2. * a;
       auto c = sqrt(b);
       auto d = (c + a).eval();
@@ -237,7 +203,7 @@ int main() {
 
    {
       cout << "Tensor from unary expr" << std::endl;
-      auto a = iota<Vector<float>>({5});
+      auto a = iota<Vector<float>>(5);
       Vector<float> b = sqrt(a);
       printTensor(b);
    }

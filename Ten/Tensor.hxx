@@ -901,6 +901,17 @@ iota(std::initializer_list<size_type> &&dims,
    return iota<T>(shape_type(std::move(dims)), value);
 }
 
+// iota<Vector<...>>(size)
+template <class T>
+   requires(::ten::isDynamicTensor<T>::value &&
+            ::ten::isDenseStorage<typename T::storage_type>::value &&
+            T::isVector())
+[[nodiscard]] auto
+iota(size_type size, typename T::value_type value = typename T::value_type(0)) {
+   using shape_type = typename T::shape_type;
+   return iota<T>(shape_type({size}), value);
+}
+
 // iota<T, Shape, Order, Storage, Allocator>(shape, value)
 template <
     class T, class Shape, StorageOrder Order = defaultOrder,
