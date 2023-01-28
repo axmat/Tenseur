@@ -557,24 +557,44 @@ class Tensor final
    }
 };
 
-// vector<T>
-template <typename T, StorageOrder order = defaultOrder,
-          typename Storage = DefaultStorage<T, Shape<::ten::dynamic>>,
-          typename Allocator = typename Storage::allocator_type>
+// Vector<T>
+template <class T, StorageOrder order = defaultOrder,
+          class Storage = DefaultStorage<T, Shape<::ten::dynamic>>,
+          class Allocator = details::AllocatorType<Storage>::type>
 using Vector = Tensor<T, Shape<::ten::dynamic>, order, Storage, Allocator>;
 
 // StaticVector<T, size>
-template <typename T, size_type Size, StorageOrder order = defaultOrder,
-          typename Storage = DefaultStorage<T, Shape<Size>>,
-          typename Allocator = details::AllocatorType<Storage>::type>
+template <class T, size_type Size, StorageOrder order = defaultOrder,
+          class Storage = DefaultStorage<T, Shape<Size>>,
+          class Allocator = details::AllocatorType<Storage>::type>
+   requires(Size > 0)
 using StaticVector = Tensor<T, Shape<Size>, order, Storage, Allocator>;
 
+// Matrix<T> or Matrix<T, Shape>
+template <class T, class Shape = DynamicShape<2>,
+          StorageOrder order = defaultOrder,
+          class Storage = DefaultStorage<T, Shape>,
+          class Allocator = details::AllocatorType<Storage>::type>
+   requires(Shape::rank() == 2)
+using Matrix = Tensor<T, Shape, order, Storage, Allocator>;
+
+// StaticMatrix<T, rows, cols>
+template <class T, size_type rows, size_type cols,
+          StorageOrder order = defaultOrder,
+          class Storage = DefaultStorage<T, Shape<rows, cols>>,
+          class Allocator = details::AllocatorType<Storage>::type>
+using StaticMatrix = Tensor<T, Shape<rows, cols>, order, Storage, Allocator>;
+
 /// \typedef DynamicTensor
-/// Dynamic tensor
-template <typename T, size_type Rank, StorageOrder order = defaultOrder,
-          typename Storage = DefaultStorage<T, DynamicShape<Rank>>,
-          typename Allocator = typename Storage::allocator_type>
+/// FIXME remove/rename for consistency
+template <class T, size_type Rank, StorageOrder order = defaultOrder,
+          class Storage = DefaultStorage<T, DynamicShape<Rank>>,
+          class Allocator = details::AllocatorType<Storage>::type>
 using DynamicTensor = Tensor<T, DynamicShape<Rank>, order, Storage, Allocator>;
+
+// TODO RankedTensor<T, Rank, ...>
+// Tensor<T, Rank> = Tensor<T, DynamicShape<Rank>>
+// StaticTensor<T, dims...> = RankedTensor<T, Rank, Shape<>>
 
 // Static tensor
 // FIXME Order?
