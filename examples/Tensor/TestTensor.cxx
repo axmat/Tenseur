@@ -394,28 +394,28 @@ int main() {
 
    {
       cout << "fill, zeros, ones and iota for default float tensors" << endl;
-      auto x = fill<2, 5>(3.);
+      auto x = fill<float, 2>({2, 5}, 3.);
       cout << "x = ";
       for (size_t i = 0; i < 10; i++) {
          cout << x[i] << " ";
       }
       cout << endl;
 
-      auto y = zeros<2, 5>();
+      auto y = zeros<float, 2>({2, 5});
       cout << "y = ";
       for (size_t i = 0; i < 10; i++) {
          cout << y[i] << " ";
       }
       cout << endl;
 
-      auto z = ones<2, 5>();
+      auto z = ones<float, 2>({2, 5});
       cout << "z = ";
       for (size_t i = 0; i < 10; i++) {
          cout << z[i] << " ";
       }
       cout << endl;
 
-      auto t = iota<2, 5>();
+      auto t = iota<float, 2>({2, 5});
       cout << "t = ";
       for (size_t i = 0; i < 10; i++) {
          cout << t[i] << " ";
@@ -425,7 +425,7 @@ int main() {
 
    {
       cout << "Reshape static tensor" << endl;
-      auto x = iota<2, 3>();
+      auto x = iota<StaticMatrix<float, 2, 3>>();
       auto y = reshape<Shape<3, 2>>(x);
       printTensor(x);
       printTensor(y);
@@ -433,13 +433,13 @@ int main() {
       printTensor(x);
       printTensor(y);
 
-      auto z = reshape<3, 2>(x);
+      auto z = reshape<StaticMatrix<float, 3, 2>>(x);
       printTensor(z);
    }
 
    {
       cout << "Reshape dynamic tensor" << endl;
-      auto x = iota<DynamicTensor<float, 2>>({2, 3});
+      auto x = iota<Matrix<float>>({2, 3});
       auto y = reshape(x, Shape<dynamic, dynamic>({3, 2}));
       printTensor(x);
       printTensor(y);

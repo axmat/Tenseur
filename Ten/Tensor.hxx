@@ -661,7 +661,8 @@ template <size_t Rank, class T>
 
 // fill<Tensor<...>>(value)
 template <class T>
-   requires(::ten::isDenseTensor<T>::value)
+   requires(::ten::isStaticTensor<T>::value &&
+            ::ten::isDenseStorage<typename T::storage_type>::value)
 [[nodiscard]] auto fill(typename T::value_type value) {
    T x;
    for (size_type i = 0; i < x.size(); i++)
@@ -674,6 +675,7 @@ template <class T, class Shape, StorageOrder Order = defaultOrder,
           class Storage = DefaultStorage<T, Shape>,
           class Allocator = typename details::AllocatorType<Storage>::type>
    requires(
+       ::ten::isStaticStorage<Storage>::value &&
        ::ten::isDenseTensor<Tensor<T, Shape, Order, Storage, Allocator>>::value)
 [[nodiscard]] auto fill(T value) {
    return fill<Tensor<T, Shape, Order, Storage, Allocator>>(value);
@@ -727,6 +729,19 @@ template <
    using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
    using shape_type = typename tensor_type::shape_type;
    return fill<tensor_type>(shape_type(std::move(dims)), value);
+}
+
+// fill<T, Rank>(shape, value)
+template <class T, size_type Rank, StorageOrder Order = defaultOrder>
+[[nodiscard]] auto fill(const DynamicShape<Rank> &shape, T value) {
+   using shape_type = ::ten::DynamicShape<Rank>;
+   return fill<T, shape_type, Order>(std::forward<Shape>(shape), value);
+}
+
+template <class T, size_type Rank, StorageOrder Order = defaultOrder>
+[[nodiscard]] auto fill(std::initializer_list<size_type> &&dims, T value) {
+   using shape_type = ::ten::DynamicShape<Rank>;
+   return fill<T, shape_type, Order>(shape_type(std::move(dims)), value);
 }
 
 // zeros<Tensor<...>>()
@@ -793,6 +808,19 @@ template <
    return zeros<tensor_type>(shape_type(std::move(dims)));
 }
 
+// zeros<T, Rank>(shape)
+template <class T, size_type Rank, StorageOrder Order = defaultOrder>
+[[nodiscard]] auto zeros(const DynamicShape<Rank> &shape) {
+   using shape_type = ::ten::DynamicShape<Rank>;
+   return zeros<T, shape_type, Order>(std::forward<Shape>(shape));
+}
+
+template <class T, size_type Rank, StorageOrder Order = defaultOrder>
+[[nodiscard]] auto zeros(std::initializer_list<size_type> &&dims) {
+   using shape_type = ::ten::DynamicShape<Rank>;
+   return zeros<T, shape_type, Order>(shape_type(std::move(dims)));
+}
+
 // ones<Tensor<...>>()
 template <class T>
    requires(::ten::isStaticTensor<T>::value &&
@@ -855,6 +883,19 @@ template <
    using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
    using shape_type = typename tensor_type::shape_type;
    return ones<tensor_type>(shape_type(std::move(dims)));
+}
+
+// ones<T, Rank>(shape)
+template <class T, size_type Rank, StorageOrder Order = defaultOrder>
+[[nodiscard]] auto ones(const DynamicShape<Rank> &shape) {
+   using shape_type = ::ten::DynamicShape<Rank>;
+   return ones<T, shape_type, Order>(std::forward<Shape>(shape));
+}
+
+template <class T, size_type Rank, StorageOrder Order = defaultOrder>
+[[nodiscard]] auto ones(std::initializer_list<size_type> &&dims) {
+   using shape_type = ::ten::DynamicShape<Rank>;
+   return ones<T, shape_type, Order>(shape_type(std::move(dims)));
 }
 
 // iota<Tensor<...>>(value)
@@ -946,45 +987,18 @@ template <
    return iota<tensor_type>(shape_type(std::move(dims)), value);
 }
 
-// fill, ones, zeros and iota for default float tensors
-template <class T, size_type... dims>
-[[nodiscard]] auto fill(T value) -> Tensor<T, Shape<dims...>> {
-   using tensor_type = Tensor<T, Shape<dims...>>;
-   return fill<tensor_type>(value);
-}
-template <size_type... dims>
-[[nodiscard]] auto fill(float value) -> Tensor<float, Shape<dims...>> {
-   return fill<float, dims...>(value);
+// iota<T, Rank>(shape, value)
+template <class T, size_type Rank, StorageOrder Order = defaultOrder>
+[[nodiscard]] auto ones(const DynamicShape<Rank> &shape, T value = T(0)) {
+   using shape_type = ::ten::DynamicShape<Rank>;
+   return iota<T, shape_type, Order>(std::forward<Shape>(shape), value);
 }
 
-template <class T, size_type... dims>
-[[nodiscard]] auto zeros() -> Tensor<T, Shape<dims...>> {
-   using tensor_type = Tensor<T, Shape<dims...>>;
-   return zeros<tensor_type>();
-}
-template <size_type... dims>
-[[nodiscard]] auto zeros() -> Tensor<float, Shape<dims...>> {
-   return zeros<float, dims...>();
-}
-
-template <class T, size_type... dims>
-[[nodiscard]] auto ones() -> Tensor<T, Shape<dims...>> {
-   using tensor_type = Tensor<T, Shape<dims...>>;
-   return ones<tensor_type>();
-}
-template <size_type... dims>
-[[nodiscard]] auto ones() -> Tensor<float, Shape<dims...>> {
-   return ones<float, dims...>();
-}
-
-template <class T, size_type... dims>
-[[nodiscard]] auto iota(T value = T(0)) -> Tensor<T, Shape<dims...>> {
-   using tensor_type = Tensor<T, Shape<dims...>>;
-   return iota<tensor_type>(value);
-}
-template <size_type... dims>
-[[nodiscard]] auto iota(float value = 0.) -> Tensor<float, Shape<dims...>> {
-   return iota<float, dims...>(value);
+template <class T, size_type Rank, StorageOrder Order = defaultOrder>
+[[nodiscard]] auto iota(std::initializer_list<size_type> &&dims,
+                        T value = T(0)) {
+   using shape_type = ::ten::DynamicShape<Rank>;
+   return iota<T, shape_type, Order>(shape_type(std::move(dims)), value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

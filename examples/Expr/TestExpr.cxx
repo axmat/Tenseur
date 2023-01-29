@@ -210,8 +210,8 @@ int main() {
 
    {
       cout << "Tensor from binary expr" << std::endl;
-      auto a = iota<5>();
-      auto b = iota<5>();
+      auto a = iota<StaticVector<float, 5>>();
+      auto b = iota<StaticVector<float, 5>>();
       StaticVector<float, 5> d = a + b;
       printTensor(d);
    }
