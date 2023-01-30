@@ -451,5 +451,17 @@ int main() {
       printTensor(z);
    }
 
+   {
+      cout << "Uninitialized dynamic vector" << endl;
+      Vector<float> x(5);
+      printTensor(x);
+   }
+
+   {
+      cout << "Uninitialized dynamic matrix" << endl;
+      Matrix<float> x(2, 3);
+      printTensor(x);
+   }
+
    return 0;
 }

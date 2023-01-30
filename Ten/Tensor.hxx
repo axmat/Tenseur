@@ -501,6 +501,22 @@ class Tensor final
       _node = expr.eval().node();
    }
 
+   /// Vector
+   explicit Tensor(size_type size) noexcept
+      requires(Shape::isDynamic() && Shape::rank() == 1)
+   {
+      _node =
+          std::make_shared<node_type>(std::initializer_list<size_type>{size});
+   }
+
+   /// Matrix
+   explicit Tensor(size_type rows, size_type cols) noexcept
+      requires(Shape::isDynamic() && Shape::rank() == 2)
+   {
+      _node = std::make_shared<node_type>(
+          std::initializer_list<size_type>{rows, cols});
+   }
+
    /// Assignment operator
    Tensor(const Tensor &t) { _node = t._node; }
 
@@ -584,6 +600,14 @@ template <class T, class Shape = DynamicShape<2>,
           class Allocator = details::AllocatorType<Storage>::type>
    requires(Shape::rank() == 2)
 using Matrix = Tensor<T, Shape, order, Storage, Allocator>;
+
+/*
+template<class T, StorageOrder order = defaultOrder,
+   class Storage = DefaultStorage<T, DynamicShape<2>>,
+   class Allocator = details::AllocatorType<Storage>::type>
+auto matrix(size_t rows, size_t cols) {
+   return Tensor<T, DynamicShape<2>, order, Storage, Allocator>({rows, cols});
+}*/
 
 // StaticMatrix<T, rows, cols>
 template <class T, size_type rows, size_type cols,
