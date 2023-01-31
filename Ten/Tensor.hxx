@@ -448,10 +448,6 @@ class Tensor final
     : public Expr<Tensor<T, Shape, Order, Storage, Allocator>>,
       public TensorOperations<T, Shape, Order, Storage, Allocator> {
  public:
-   /// \typedef scalar_type
-   /// Scalar type
-   using scalar_type = Scalar<T>;
-
    // TODO Type of the casted tensor
    // T must be convertible to To
    /*
