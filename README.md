@@ -1,22 +1,23 @@
-# Tenseur
+[![docs](https://readthedocs.org/projects/tenseur/badge/?version=latest)](https://tenseur.readthedocs.io/en/latest/index.html)
+
+## Tenseur
 A header only C++20 tensor library [WIP]
 
-## Features
+### Features
 - Multi dimensional arrays
 - Support static, dynamic and mixed shape tensors
 - Lazy evaluation of expressions
 - BLAS backend for high performance numerical linear algebra
 - Chain expressions
-- Doxygen docs
 
-## Todo
+### Todo
 - Operators precedence
 - Check tensor shapes at compile time whenever possible
 - Sparse tensors
 - Special matrices
 - Automatic differentiation
 - Python binding
-- Sphinx docs
+- Documentations
 
 ## Example
 ```
