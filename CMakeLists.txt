@@ -66,3 +66,9 @@ if (TENSEUR_EXAMPLES)
   add_subdirectory(examples)
 endif()
 
+# Build the docs
+option(TENSEUR_DOCS "Build documentation." OFF)
+if (TENSEUR_DOCS)
+  add_subdirectory(docs)
+endif()
+

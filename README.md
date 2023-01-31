@@ -7,6 +7,7 @@ A header only C++20 tensor library [WIP]
 - Lazy evaluation of expressions
 - BLAS backend for high performance numerical linear algebra
 - Chain expressions
+- Doxygen docs
 
 ## Todo
 - Operators precedence
@@ -15,6 +16,7 @@ A header only C++20 tensor library [WIP]
 - Special matrices
 - Automatic differentiation
 - Python binding
+- Sphinx docs
 
 ## Example
 ```
@@ -30,3 +32,20 @@ int main() {
    Vector<float> x = a * b + c;
 }
 ```
+
+## Build the examples
+```
+mkdir build-examples
+cd build-examples
+cmake .. -DCMAKE_CXX_COMPILER=clang++ -DTENSEUR_EXAMPLES=ON
+cmake --build . --
+```
+
+## Build the docs
+```
+mkdir build-docs
+cd build-docs
+cmake .. -DCMAKE_CXX_COMPILER=clang++ -DTENSEUR_DOCS=ON
+cmake --build . --
+```
+
