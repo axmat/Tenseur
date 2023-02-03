@@ -5,6 +5,7 @@
 #include <optional>
 #include <type_traits>
 
+#include <Ten/Functional.hxx>
 #include <Ten/Types.hxx>
 
 namespace ten {
@@ -128,7 +129,7 @@ class UnaryNode {
 
    /// Construct a unary node if the function doesn't take additional parameters
    UnaryNode(const std::shared_ptr<Input> &input) noexcept
-      requires(!func_type::isParametric())
+      requires(!::ten::functional::HasParams<func_type>::value)
        : _input(input) {}
 
    /// Construct a unary node if the function take additional parameters.
@@ -136,13 +137,8 @@ class UnaryNode {
    /// to the constructor of the function when necessary.
    template <typename... FuncArgs>
    UnaryNode(const std::shared_ptr<Input> &input, FuncArgs... args) noexcept
-      requires(func_type::isParametric())
+      requires(::ten::functional::HasParams<func_type>::value)
        : _input(input), _func(func_type(std::forward<FuncArgs>(args)...)) {}
-
-   /// Returns whether the functions has parameters
-   constexpr inline bool isParametric() { return func_type::isParametric(); }
-
-   const func_type &func() { return _func.value(); }
 
    [[nodiscard]] inline std::shared_ptr<Output> node() { return _value; }
 
@@ -179,7 +175,7 @@ class UnaryNode {
       }
 
       // Evaluate
-      if constexpr (func_type::isParametric()) {
+      if constexpr (::ten::functional::HasParams<func_type>::value) {
          _func.value().call(*::ten::details::NodeWrapper<Input>::ptr(_input),
                             *_value.get());
       } else {
@@ -279,19 +275,15 @@ class BinaryNode {
 
    BinaryNode(const std::shared_ptr<Left> &left,
               const std::shared_ptr<Right> &right) noexcept
-      requires(!func_type::isParametric())
+      requires(!::ten::functional::HasParams<func_type>::value)
        : _left(left), _right(right) {}
 
    template <typename... FuncArgs>
    BinaryNode(const std::shared_ptr<Left> &left,
               const std::shared_ptr<Right> &right, FuncArgs... args) noexcept
-      requires(func_type::isParametric())
+      requires(::ten::functional::HasParams<func_type>::value)
        : _func(func_type(std::forward<FuncArgs>(args)...)), _left(left),
          _right(right) {}
-
-   constexpr inline bool isParametric() { return func_type::isParametric(); }
-
-   const func_type &func() { return _func.value(); }
 
    [[nodiscard]] inline std::shared_ptr<Output> node() { return _value; }
 

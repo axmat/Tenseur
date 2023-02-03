@@ -11,18 +11,22 @@
 #include <Ten/Types.hxx>
 
 namespace ten::functional {
+// Functions types
+template <bool params = false> struct Func {};
+
+template <class T> struct HasParams {
+   static constexpr bool value = std::is_base_of_v<Func<>, T>;
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Unary functions
 
 /// Square root
-template <class T, class R = T> struct Sqrt {
-   using input_type = T;
-   using output_type = R;
+template <class A, class B = A> struct Sqrt : Func<> {
+   using output_type = B;
 
-   static constexpr bool isParametric() { return false; }
-
-   static constexpr void call(const T &a, R &b) {
-      using value_type = typename R::value_type;
+   static void call(const A &a, B &b) {
+      using value_type = typename B::value_type;
       for (size_t i = 0; i < a.size(); i++) {
          b[i] = std::sqrt(static_cast<value_type>(a[i]));
       }
@@ -30,14 +34,11 @@ template <class T, class R = T> struct Sqrt {
 };
 
 /// Absolute value
-template <class T, class R = T> struct Abs {
-   using input_type = T;
-   using output_type = R;
+template <class A, class B = A> struct Abs : Func<> {
+   using output_type = B;
 
-   static constexpr bool isParametric() { return false; }
-
-   static constexpr void call(const T &a, R &b) {
-      using value_type = typename R::value_type;
+   static void call(const A &a, B &b) {
+      using value_type = typename B::value_type;
       for (size_t i = 0; i < a.size(); i++) {
          b[i] = std::abs(static_cast<value_type>(a[i]));
       }
@@ -45,34 +46,28 @@ template <class T, class R = T> struct Abs {
 };
 
 /// Power
-template <class T, class R = T> struct Pow {
+template <class A, class B = A> struct Pow : Func<true> {
  private:
    double _n;
 
  public:
-   using input_type = T;
-   using output_type = R;
+   using output_type = B;
 
    explicit Pow(double n) : _n(n) {}
 
-   static constexpr bool isParametric() { return true; }
-
-   void call(const T &a, R &b) const {
-      using value_type = typename R::value_type;
+   void call(const A &a, B &b) const {
+      using value_type = typename B::value_type;
       for (size_t i = 0; i < a.size(); i++) {
          b[i] = std::pow(static_cast<value_type>(a[i]), _n);
       }
    }
 };
 
-template <class T, class R = typename T::scalarnode_type> struct Min {
-   using input_type = T;
-   using output_type = R;
+template <class A, class B = typename A::scalarnode_type> struct Min : Func<> {
+   using output_type = B;
 
-   static constexpr bool isParametric() { return false; }
-
-   static constexpr void call(const T &a, R &b) {
-      using type = typename T::value_type;
+   static constexpr void call(const A &a, B &b) {
+      using type = typename A::value_type;
       type res = a[0];
       for (size_t i = 1; i < a.size(); i++) {
          res = std::min(static_cast<type>(a[i]), res);
@@ -81,14 +76,11 @@ template <class T, class R = typename T::scalarnode_type> struct Min {
    }
 };
 
-template <class T, class R = typename T::scalarnode_type> struct Max {
-   using input_type = T;
-   using output_type = R;
+template <class A, class B = typename A::scalarnode_type> struct Max : Func<> {
+   using output_type = B;
 
-   static constexpr bool isParametric() { return false; }
-
-   static constexpr void call(const T &a, R &b) {
-      using type = typename T::value_type;
+   static constexpr void call(const A &a, B &b) {
+      using type = typename A::value_type;
       type res = a[0];
       for (size_t i = 1; i < a.size(); i++) {
          res = std::max(static_cast<type>(a[i]), res);
@@ -124,31 +116,23 @@ enum class BinaryOperation { add, sub, div };
 template <BinaryOperation kind> struct BinaryFunc {
 
    template <class A, class B, class C = details::common_type_t<A, B>>
-   struct Func {
+   struct Func : ::ten::functional::Func<> {
       static_assert(A::isVector() && B::isVector(),
                     "Expected A and B to be vectors.");
 
-      using left_input_type = A;
-      using right_input_type = B;
       using output_type = C;
 
-      using left_shape_type = typename A::shape_type;
-      using right_shape_type = typename B::shape_type;
-      using output_shape_type = typename C::shape_type;
-
-      static constexpr output_shape_type
-      outputShape(const left_shape_type &left, const right_shape_type &right) {
-         output_shape_type s(left);
+      static constexpr typename C::shape_type
+      outputShape(const A::shape_type &left, const B::shape_type &right) {
+         typename C::shape_type s(left);
          return s;
       }
 
-      static constexpr auto outputShape(const A &a, const B &b) {
-         return a.shape();
-      }
+      static auto outputShape(const A &a, const B &b) { return a.shape(); }
 
       static constexpr bool isParametric() { return false; }
 
-      static constexpr void call(const A &left, const B &right, C &result) {
+      static void call(const A &left, const B &right, C &result) {
          size_t n = left.size();
          using value_type = typename C::value_type;
          for (size_t i = 0; i < n; i++) {
@@ -222,26 +206,19 @@ template <class A, class B, class C = typename details::MulResult<A, B>::type>
 struct Mul;
 
 // vector * vector
-template <VectorNode A, VectorNode B, VectorNode C> struct Mul<A, B, C> {
-   using left_input_type = A;
-   using right_input_type = B;
+template <VectorNode A, VectorNode B, VectorNode C>
+struct Mul<A, B, C> : Func<> {
    using output_type = C;
 
-   using left_shape_type = typename A::shape_type;
-   using right_shape_type = typename B::shape_type;
-   using output_shape_type = typename C::shape_type;
-
-   static constexpr bool isParametric() { return false; }
-
-   static constexpr output_shape_type
-   outputShape(const left_shape_type &left, const right_shape_type &right) {
+   static constexpr C::shape_type outputShape(const A::shape_type &left,
+                                              const B::shape_type &right) {
       std::initializer_list<size_type> &&dims = {
           std::max(left.dim(0), right.dim(0))};
-      output_shape_type s(std::move(dims));
+      typename C::shape_type s(std::move(dims));
       return s;
    }
 
-   static constexpr void call(const A &left, const B &right, C &result) {
+   static void call(const A &left, const B &right, C &result) {
       size_t n = left.size();
       using value_type = typename C::value_type;
       for (size_t i = 0; i < n; i++) {
@@ -252,72 +229,50 @@ template <VectorNode A, VectorNode B, VectorNode C> struct Mul<A, B, C> {
 };
 
 // matrix * matrix
-template <MatrixNode A, MatrixNode B, MatrixNode C> struct Mul<A, B, C> {
-   using left_input_type = A;
-   using right_input_type = B;
+template <MatrixNode A, MatrixNode B, MatrixNode C>
+struct Mul<A, B, C> : Func<> {
    using output_type = C;
 
-   using left_shape_type = typename A::shape_type;
-   using right_shape_type = typename B::shape_type;
-   using output_shape_type = typename C::shape_type;
-
-   static constexpr bool isParametric() { return false; }
-
-   static constexpr output_shape_type
-   outputShape(const left_shape_type &left, const right_shape_type &right) {
+   static C::shape_type outputShape(const A::shape_type &left,
+                                    const B::shape_type &right) {
       std::initializer_list<size_type> &&dims = {left.dim(0), right.dim(1)};
-      output_shape_type s(std::move(dims));
+      typename C::shape_type s(std::move(dims));
       return s;
    }
 
-   static constexpr void call(const A &left, const B &right, C &result) {
+   static void call(const A &left, const B &right, C &result) {
       kernels::mul(left, right, result);
    }
 };
 
 // matrix * vector
-template <MatrixNode A, VectorNode B, VectorNode C> struct Mul<A, B, C> {
-   using left_input_type = A;
-   using right_input_type = B;
+template <MatrixNode A, VectorNode B, VectorNode C>
+struct Mul<A, B, C> : Func<> {
    using output_type = C;
 
-   using left_shape_type = typename A::shape_type;
-   using right_shape_type = typename B::shape_type;
-   using output_shape_type = typename C::shape_type;
-
-   static constexpr bool isParametric() { return false; }
-
-   static constexpr output_shape_type
-   outputShape(const left_shape_type &left, const right_shape_type &right) {
+   static C::shape_type outputShape(const A::shape_type &left,
+                                    const B::shape_type &right) {
       // FIXME transposed
       std::initializer_list<size_type> &&dims = {left.dim(0)};
-      output_shape_type s(std::move(dims));
+      typename C::shape_type s(std::move(dims));
       return s;
    }
 
-   static constexpr void call(const A &left, const B &right, C &result) {
+   static void call(const A &left, const B &right, C &result) {
       kernels::mul(left, right, result);
    }
 };
 
 // scalar * tensor
 template <traits::ScalarNode A, traits::TensorNode B, traits::TensorNode C>
-struct Mul<A, B, C> {
-   using left_input_type = A;
-   using right_input_type = B;
+struct Mul<A, B, C> : Func<> {
    using output_type = C;
 
-   using right_shape_type = typename B::shape_type;
-   using output_shape_type = typename C::shape_type;
-
-   static constexpr bool isParametric() { return false; }
-
-   static constexpr output_shape_type
-   outputShape(const right_shape_type &right) {
+   static C::shape_type outputShape(const B::shape_type &right) {
       return right;
    }
 
-   static constexpr void call(const A &left, const B &right, C &result) {
+   static void call(const A &left, const B &right, C &result) {
       size_t n = result.size();
       using value_type = typename C::value_type;
       for (size_t i = 0; i < n; i++) {
