@@ -11,13 +11,15 @@ A header only C++20 tensor library [WIP]
 - Chain expressions
 
 ### Todo
+- Tests
+- CI/CD
 - Operators precedence
 - Check tensor shapes at compile time whenever possible
 - Sparse tensors
 - Special matrices
 - Automatic differentiation
 - Python binding
-- Documentations
+- Sphinx documentation
 
 ## Example
 ```
