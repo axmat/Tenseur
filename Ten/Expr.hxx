@@ -176,11 +176,11 @@ class UnaryNode {
 
       // Evaluate
       if constexpr (::ten::functional::HasParams<func_type>::value) {
-         _func.value().call(*::ten::details::NodeWrapper<Input>::ptr(_input),
-                            *_value.get());
+         _func.value()(*::ten::details::NodeWrapper<Input>::ptr(_input),
+                       *_value.get());
       } else {
-         func_type::call(*::ten::details::NodeWrapper<Input>::ptr(_input),
-                         *_value.get());
+         func_type::operator()(*::ten::details::NodeWrapper<Input>::ptr(_input),
+                               *_value.get());
       }
 
       return evaluated_type(_value);
@@ -337,8 +337,9 @@ class BinaryNode {
       }
 
       // Call F
-      func_type::call(*details::NodeWrapper<Left>::ptr(_left),
-                      *details::NodeWrapper<Right>::ptr(_right), *_value.get());
+      func_type::operator()(*details::NodeWrapper<Left>::ptr(_left),
+                            *details::NodeWrapper<Right>::ptr(_right),
+                            *_value.get());
 
       return evaluated_type(_value);
    }

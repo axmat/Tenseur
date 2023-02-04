@@ -25,7 +25,7 @@ template <class T> struct HasParams {
 template <class A, class B = A> struct Sqrt : Func<> {
    using output_type = B;
 
-   static void call(const A &a, B &b) {
+   static void operator()(const A &a, B &b) {
       using value_type = typename B::value_type;
       for (size_t i = 0; i < a.size(); i++) {
          b[i] = std::sqrt(static_cast<value_type>(a[i]));
@@ -37,7 +37,7 @@ template <class A, class B = A> struct Sqrt : Func<> {
 template <class A, class B = A> struct Abs : Func<> {
    using output_type = B;
 
-   static void call(const A &a, B &b) {
+   static void operator()(const A &a, B &b) {
       using value_type = typename B::value_type;
       for (size_t i = 0; i < a.size(); i++) {
          b[i] = std::abs(static_cast<value_type>(a[i]));
@@ -55,7 +55,7 @@ template <class A, class B = A> struct Pow : Func<true> {
 
    explicit Pow(double n) : _n(n) {}
 
-   void call(const A &a, B &b) const {
+   void operator()(const A &a, B &b) const {
       using value_type = typename B::value_type;
       for (size_t i = 0; i < a.size(); i++) {
          b[i] = std::pow(static_cast<value_type>(a[i]), _n);
@@ -66,7 +66,7 @@ template <class A, class B = A> struct Pow : Func<true> {
 template <class A, class B = typename A::scalarnode_type> struct Min : Func<> {
    using output_type = B;
 
-   static constexpr void call(const A &a, B &b) {
+   static constexpr void operator()(const A &a, B &b) {
       using type = typename A::value_type;
       type res = a[0];
       for (size_t i = 1; i < a.size(); i++) {
@@ -79,7 +79,7 @@ template <class A, class B = typename A::scalarnode_type> struct Min : Func<> {
 template <class A, class B = typename A::scalarnode_type> struct Max : Func<> {
    using output_type = B;
 
-   static constexpr void call(const A &a, B &b) {
+   static constexpr void operator()(const A &a, B &b) {
       using type = typename A::value_type;
       type res = a[0];
       for (size_t i = 1; i < a.size(); i++) {
@@ -132,7 +132,7 @@ template <BinaryOperation kind> struct BinaryFunc {
 
       static constexpr bool isParametric() { return false; }
 
-      static void call(const A &left, const B &right, C &result) {
+      static void operator()(const A &left, const B &right, C &result) {
          size_t n = left.size();
          using value_type = typename C::value_type;
          for (size_t i = 0; i < n; i++) {
@@ -218,7 +218,7 @@ struct Mul<A, B, C> : Func<> {
       return s;
    }
 
-   static void call(const A &left, const B &right, C &result) {
+   static void operator()(const A &left, const B &right, C &result) {
       size_t n = left.size();
       using value_type = typename C::value_type;
       for (size_t i = 0; i < n; i++) {
@@ -240,7 +240,7 @@ struct Mul<A, B, C> : Func<> {
       return s;
    }
 
-   static void call(const A &left, const B &right, C &result) {
+   static void operator()(const A &left, const B &right, C &result) {
       kernels::mul(left, right, result);
    }
 };
@@ -258,7 +258,7 @@ struct Mul<A, B, C> : Func<> {
       return s;
    }
 
-   static void call(const A &left, const B &right, C &result) {
+   static void operator()(const A &left, const B &right, C &result) {
       kernels::mul(left, right, result);
    }
 };
@@ -272,7 +272,7 @@ struct Mul<A, B, C> : Func<> {
       return right;
    }
 
-   static void call(const A &left, const B &right, C &result) {
+   static void operator()(const A &left, const B &right, C &result) {
       size_t n = result.size();
       using value_type = typename C::value_type;
       for (size_t i = 0; i < n; i++) {
