@@ -109,7 +109,7 @@ class UnaryNode {
  public:
    using input_node_type = details::OutputNodeType<Input>::type;
    using output_node_type = Output;
-   using func_type = Func<input_node_type, Output, Args...>;
+   using func_type = Func<input_node_type, Output>;
 
    /// \typedef evaluated_type
    /// Type of the evaluated expression
@@ -210,6 +210,8 @@ class UnaryExpr : ::ten::Expr<UnaryExpr<E, Func, Args...>> {
                                              typename output_type::scalar_type,
                                              typename output_type::tensor_type>;
 
+   using func_type = Func<input_node_type>;
+
  private:
    /// Shared ptr to the node
    std::shared_ptr<node_type> _node;
@@ -217,7 +219,15 @@ class UnaryExpr : ::ten::Expr<UnaryExpr<E, Func, Args...>> {
  public:
    /// Construct a ten::UnaryNode from an expression
    explicit UnaryExpr(const std::shared_ptr<E> &expr) noexcept
+      requires(!::ten::functional::HasParams<func_type>::value)
        : _node(std::make_shared<node_type>(expr)) {}
+
+   template <typename... FuncArgs>
+   explicit UnaryExpr(const std::shared_ptr<E> &expr,
+                      FuncArgs &&...args) noexcept
+      requires(::ten::functional::HasParams<func_type>::value)
+       : _node(std::make_shared<node_type>(expr,
+                                           std::forward<FuncArgs>(args)...)) {}
 
    // Returns the shared pointer to the node of the expression
    [[nodiscard]] std::shared_ptr<node_type> node() const { return _node; }

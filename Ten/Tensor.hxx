@@ -386,6 +386,12 @@ class TensorNode
        : _storage(storage), _shape(shape),
          _stride(typename base_type::stride_type(_shape.value())) {}
 
+   TensorNode(TensorNode &&) = default;
+   TensorNode(const TensorNode &) = default;
+   // Assignment
+   TensorNode &operator=(TensorNode &&) = default;
+   TensorNode &operator=(const TensorNode &) = default;
+
    [[nodiscard]] size_type dim(size_type index) const {
       return _shape.value().dim(index);
    }
@@ -632,48 +638,44 @@ using DynamicTensor = Tensor<T, DynamicShape<Rank>, order, Storage, Allocator>;
 // Basic functions
 
 // reshape<Shape>(x)
-template <class Shape, class T>
-   requires(::ten::isStaticTensor<T>::value && Shape::isStatic() &&
-            Shape::staticSize() == T::staticSize())
-[[nodiscard]] auto reshape(const T &x) {
-   using node_type =
-       TensorNode<typename T::value_type, Shape, T::storageOrder(),
-                  typename T::storage_type, typename T::allocator_type>;
-   using tensor_type =
-       Tensor<typename T::value_type, Shape, T::storageOrder(),
-              typename T::storage_type, typename T::allocator_type>;
-   auto node = std::make_shared<node_type>(x.storage());
-   return tensor_type(node);
+template <class Shape, class E>
+   requires isExpr<std::remove_cvref_t<E>>
+auto reshape(E &&expr) {
+   using node_type = std::remove_cvref_t<E>::node_type;
+   return ::ten::UnaryExpr<
+       node_type, ::ten::functional::StaticReshape<Shape>::template Func>(
+       expr.node());
 }
 
 // reshape<dims...>(x)
-template <size_t... dims, class T>
-   requires(::ten::isStaticTensor<T>::value)
-[[nodiscard]] auto reshape(T &x) {
-   using shape_type = ::ten::Shape<dims...>;
-   return reshape<shape_type>(x);
+template <size_type... dims, class E>
+   requires isExpr<std::remove_cvref_t<E>>
+auto reshape(E &&expr) {
+   using node_type = std::remove_cvref_t<E>::node_type;
+   return ::ten::UnaryExpr<
+       node_type, ::ten::functional::DimsStaticReshape<dims...>::template Func>(
+       expr.node());
 }
 
 // reshape(x, shape)
-template <class T, class Shape>
-   requires(::ten::isDynamicTensor<T>::value)
-[[nodiscard]] auto reshape(const T &x, Shape &&shape) {
-   using node_type =
-       TensorNode<typename T::value_type, Shape, T::storageOrder(),
-                  typename T::storage_type, typename T::allocator_type>;
-   using tensor_type =
-       Tensor<typename T::value_type, Shape, T::storageOrder(),
-              typename T::storage_type, typename T::allocator_type>;
-   auto node = std::make_shared<node_type>(x.storage(), shape);
-   return tensor_type(node);
+template <class E, class Shape>
+   requires isExpr<std::remove_cvref_t<E>>
+auto reshape(E &&expr, Shape &&shape) {
+   using node_type = std::remove_cvref_t<E>::node_type;
+   using shape_type = std::remove_cvref_t<Shape>;
+   return ::ten::UnaryExpr<
+       node_type, ::ten::functional::DynamicReshape<shape_type>::template Func,
+       shape_type>(expr.node(), shape);
 }
 
-template <size_t Rank, class T>
-   requires(::ten::isDynamicTensor<T>::value)
-[[nodiscard]] auto reshape(const T &x,
-                           std::initializer_list<size_type> &&dims) {
-   using shape_type = DynamicShape<Rank>;
-   return reshape(x, shape_type(std::move(dims)));
+// reshape<Rank>(x, shape)
+template <size_type Rank, class E>
+   requires isExpr<std::remove_cvref_t<E>>
+auto reshape(E &&expr, std::initializer_list<size_type> &&dims) {
+   using expr_type = std::remove_cvref_t<E>;
+   using shape_type = ::ten::DynamicShape<Rank>;
+   return reshape<expr_type, shape_type>(std::forward<expr_type>(expr),
+                                         shape_type(std::move(dims)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

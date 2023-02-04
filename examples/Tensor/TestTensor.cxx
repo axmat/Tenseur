@@ -426,28 +426,27 @@ int main() {
    {
       cout << "Reshape static tensor" << endl;
       auto x = iota<StaticMatrix<float, 2, 3>>();
-      auto y = reshape<Shape<3, 2>>(x);
+      auto y = reshape<Shape<3, 2>>(x).eval();
       printTensor(x);
       printTensor(y);
       y[1] = 99.;
       printTensor(x);
       printTensor(y);
-
-      auto z = reshape<StaticMatrix<float, 3, 2>>(x);
-      printTensor(z);
+      auto z = reshape<3, 2>(x).eval();
+      //auto z = reshape<StaticMatrix<float, 3, 2>>(x);
+      //printTensor(z);
    }
 
    {
       cout << "Reshape dynamic tensor" << endl;
       auto x = iota<Matrix<float>>({2, 3});
-      auto y = reshape(x, Shape<dynamic, dynamic>({3, 2}));
+      auto y = reshape(x, Shape<dynamic, dynamic>({3, 2})).eval();
       printTensor(x);
       printTensor(y);
       y[1] = 99.;
       printTensor(x);
       printTensor(y);
-
-      auto z = reshape<2>(x, {3, 2});
+      auto z = reshape<2>(x, {3, 2}).eval();
       printTensor(z);
    }
 

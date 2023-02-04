@@ -15,7 +15,7 @@ namespace ten::functional {
 template <bool params = false> struct Func {};
 
 template <class T> struct HasParams {
-   static constexpr bool value = std::is_base_of_v<Func<>, T>;
+   static constexpr bool value = std::is_base_of_v<Func<true>, T>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,8 +129,6 @@ template <BinaryOperation kind> struct BinaryFunc {
       }
 
       static auto outputShape(const A &a, const B &b) { return a.shape(); }
-
-      static constexpr bool isParametric() { return false; }
 
       static void operator()(const A &left, const B &right, C &result) {
          size_t n = left.size();
@@ -280,6 +278,56 @@ struct Mul<A, B, C> : Func<> {
                      static_cast<value_type>(right[i]);
       }
    }
+};
+
+namespace details {
+// dynamic reshape result
+template <class A, class Shape> struct ReshapeResult {
+   using type =
+       TensorNode<typename A::value_type, Shape, A::storageOrder(),
+                  typename A::storage_type, typename A::allocator_type>;
+};
+} // namespace details
+
+// Reshape to static
+template <class S> struct StaticReshape {
+   static_assert(S::isStatic(), "Shape must be static");
+
+   template <class A, class B = details::ReshapeResult<A, S>::type>
+   struct Func : ::ten::functional::Func<> {
+      using output_type = B;
+
+      static void operator()(const A &left, B &right) {
+         right = B(left.storage());
+      }
+   };
+};
+
+template <size_type... dims>
+using DimsStaticReshape = StaticReshape<::ten::Shape<dims...>>;
+
+// Dynamic reshape
+template <class Shape> struct DynamicReshape {
+
+   template <class A, class B = details::ReshapeResult<A, Shape>::type>
+   struct Func : ::ten::functional::Func<true> {
+    public:
+      using output_type = B;
+
+    private:
+      Shape _shape;
+
+    public:
+      Func(const Shape &shape) : _shape(shape) {}
+      Func(Shape &&shape) : _shape(std::move(shape)) {}
+
+      B::shape_type outputShape(const A::shape_type &) { return _shape; }
+
+      // FIXME shape ?
+      void operator()(const A &left, B &right) {
+         right = B(left.storage(), _shape);
+      }
+   };
 };
 
 } // namespace ten::functional
