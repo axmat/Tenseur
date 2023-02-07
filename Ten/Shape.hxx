@@ -182,6 +182,23 @@ template <size_type First, size_type... Rest> class Shape {
    {
       _dims[index] = value;
    }
+
+   template <class S>
+   // TODO S must be a shape type
+   bool operator==(const S &s) const noexcept {
+      if (S::rank() != rank()) {
+         return false;
+      }
+      if (s.size() != size()) {
+         return false;
+      }
+      for (size_t i = 0; i < S::rank(); i++) {
+         if (s.dim(i) != dim(i)) {
+            return false;
+         }
+      }
+      return true;
+   }
 };
 
 namespace details {

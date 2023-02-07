@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.2)
 
+cmake_policy(SET CMP0135 NEW)
+
 project(Tenseur VERSION 1.0.0
                 DESCRIPTION "A header only C++20 tensor library."
                 HOMEPAGE_URL "https://github.com/axmat/Tenseur")
@@ -60,15 +62,21 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
 # Install directory
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/Ten DESTINATION include)
 
+# Build the tests
+option(TENSEUR_TESTS "Build tests." OFF)
+if (TENSEUR_TESTS)
+  add_subdirectory(Tests)
+endif()
+
 # Build the examples
 option(TENSEUR_EXAMPLES "Build examples." OFF)
 if (TENSEUR_EXAMPLES)
-  add_subdirectory(examples)
+  add_subdirectory(Examples)
 endif()
 
 # Build the docs
 option(TENSEUR_DOCS "Build documentation." OFF)
 if (TENSEUR_DOCS)
-  add_subdirectory(docs)
+  add_subdirectory(Docs)
 endif()
 

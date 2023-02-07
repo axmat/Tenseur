@@ -6,6 +6,14 @@
 #include <array>
 #include <type_traits>
 
+namespace ten {
+template <class> std::string to_string();
+
+template <> std::string to_string<float>() { return "float"; }
+
+template <> std::string to_string<double>() { return "double"; }
+} // namespace ten
+
 namespace ten::details {
 
 /*

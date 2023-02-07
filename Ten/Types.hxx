@@ -140,12 +140,30 @@ using DefaultStorage =
     std::conditional_t<Shape::isDynamic(), DenseStorage<T, DefaultAllocator<T>>,
                        StaticDenseStorage<T, Shape>>;
 
-// Dense
+// Dense tensor
 template <class> struct isDenseTensor : std::false_type {};
 template <class Scalar, class Shape, StorageOrder order, class Storage,
           class Allocator>
 struct isDenseTensor<Tensor<Scalar, Shape, order, Storage, Allocator>> {
    static constexpr bool value = isDenseStorage<Storage>::value;
+};
+
+// Dense vector
+template <class> struct isDenseVector : std::false_type {};
+template <class Scalar, class Shape, StorageOrder order, class Storage,
+          class Allocator>
+struct isDenseVector<Tensor<Scalar, Shape, order, Storage, Allocator>> {
+   static constexpr bool value =
+       isDenseStorage<Storage>::value && Shape::rank() == 1;
+};
+
+// Dense matrix
+template <class> struct isDenseMatrix : std::false_type {};
+template <class Scalar, class Shape, StorageOrder order, class Storage,
+          class Allocator>
+struct isDenseMatrix<Tensor<Scalar, Shape, order, Storage, Allocator>> {
+   static constexpr bool value =
+       isDenseStorage<Storage>::value && Shape::rank() == 2;
 };
 
 // Vector node
@@ -186,6 +204,9 @@ concept SameStorage =
 template <class A, class B>
 concept SameAllocator =
     std::is_same_v<typename A::allocator_type, typename B::allocator_type>;
+
+template <class A, class B>
+concept SameTensor = std::same_as<A, B>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Node types
