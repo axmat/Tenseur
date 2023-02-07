@@ -11,6 +11,7 @@ A header only C++20 tensor library [WIP]
 - Chain expressions
 
 ### Todo
+- Untyped tensor
 - Tests
 - CI/CD
 - Operators precedence
@@ -41,6 +42,14 @@ int main() {
 mkdir build-examples
 cd build-examples
 cmake .. -DCMAKE_CXX_COMPILER=clang++ -DTENSEUR_EXAMPLES=ON
+cmake --build . --
+```
+
+## Build the tests
+```
+mkdir build-tests
+cd build-tests
+cmake .. -DCMAKE_CXX_COMPILER=clang++ -DTENSEUR_TESTS=ON
 cmake --build . --
 ```
 
