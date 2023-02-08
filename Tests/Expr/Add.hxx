@@ -2,9 +2,9 @@
 #define TENSEUR_TESTS_EXPR_ADD
 
 #include <Ten/Tensor.hxx>
+#include <Ten/Tests/Tests.hxx>
 
 #include "Ref.hxx"
-#include "Tests.hxx"
 
 using namespace ten;
 
