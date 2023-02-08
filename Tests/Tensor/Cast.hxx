@@ -17,15 +17,15 @@ testing::AssertionResult testCastStaticTensor() {
    return ::ten::tests::same_values(a, b);
 }
 
-template <typename> class cast : public ::testing::Test {};
-TYPED_TEST_SUITE_P(cast);
+template <typename> class Cast : public ::testing::Test {};
+TYPED_TEST_SUITE_P(Cast);
 
-template <class From, class To> struct types_holder {
+template <class From, class To> struct TypesHolder {
    using from_type = From;
    using to_type = To;
 };
 
-TYPED_TEST_P(cast, castTensor) {
+TYPED_TEST_P(Cast, castStaticTensor) {
    using namespace ten;
    using from_type = typename TypeParam::from_type;
    using to_type = typename TypeParam::to_type;
@@ -41,11 +41,11 @@ TYPED_TEST_P(cast, castTensor) {
 }
 
 // Register the test suite
-REGISTER_TYPED_TEST_SUITE_P(cast, castTensor);
+REGISTER_TYPED_TEST_SUITE_P(Cast, castStaticTensor);
 // Instantiate the pattern with the types
 // TODO Pretty printing format
 using types =
-    ::testing::Types<types_holder<float, double>, types_holder<double, float>>;
-INSTANTIATE_TYPED_TEST_SUITE_P(cast, cast, types);
+    ::testing::Types<TypesHolder<float, double>, TypesHolder<double, float>>;
+INSTANTIATE_TYPED_TEST_SUITE_P(Cast, Cast, types);
 
 #endif
