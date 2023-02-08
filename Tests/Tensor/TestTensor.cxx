@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "Cast.hxx"
 #include "Traits.hxx"
 
 int main(int argc, char **argv) {

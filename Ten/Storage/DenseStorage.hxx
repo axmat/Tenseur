@@ -16,6 +16,8 @@ template <typename T, typename Allocator> class DenseStorage final {
    using allocator_type = Allocator;
    using allocator_traits = std::allocator_traits<Allocator>;
 
+   template <class To> using casted_type = DenseStorage<To, Allocator>;
+
  private:
    allocator_type _allocator{};
    size_type _size = 0;
@@ -49,6 +51,8 @@ template <typename T, typename Allocator> class DenseStorage final {
 template <typename T, typename Shape> class StaticDenseStorage final {
  public:
    using value_type = T;
+
+   template <class To> using casted_type = StaticDenseStorage<To, Shape>;
 
  private:
    alignas(T) T _data[Shape::staticSize()];

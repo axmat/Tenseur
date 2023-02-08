@@ -454,14 +454,14 @@ class Tensor final
     : public Expr<Tensor<T, Shape, Order, Storage, Allocator>>,
       public TensorOperations<T, Shape, Order, Storage, Allocator> {
  public:
-   // TODO Type of the casted tensor
+   // Type of the casted tensor
    // T must be convertible to To
-   /*
-  template <typename To>
-  requires std::convertible_to<T, To>
-  using casted_type = Tensor<T, Shape, Order,
-      Storage::template casted_type<To>,
-      Allocator::template casted_type<To>>;*/
+   template <typename To>
+      requires std::convertible_to<T, To>
+   using casted_type =
+       Tensor<To, Shape, Order, typename Storage::template casted_type<To>,
+              typename details::AllocatorType<
+                  typename Storage::template casted_type<To>>::type>;
 
    /// \typedef base_type
    /// Type of the tensor operations.
@@ -636,6 +636,30 @@ using DynamicTensor = Tensor<T, DynamicShape<Rank>, order, Storage, Allocator>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Basic functions
+
+// Cast a tensor
+template <class To, class T>
+   requires(::ten::isDynamicTensor<T>::value)
+auto cast(const T &x) {
+   using tensor_type = T::template casted_type<To>;
+   tensor_type r(x.shape());
+   for (size_type i = 0; i < x.size(); i++) {
+      r[i] = static_cast<To>(x[i]);
+   }
+   return r;
+}
+
+// Cast a static tensor
+template <class To, class T>
+   requires(::ten::isStaticTensor<T>::value)
+auto cast(const T &x) {
+   using tensor_type = T::template casted_type<To>;
+   tensor_type r;
+   for (size_type i = 0; i < x.size(); i++) {
+      r[i] = static_cast<To>(x[i]);
+   }
+   return r;
+}
 
 // reshape<Shape>(x)
 template <class Shape, class E>
