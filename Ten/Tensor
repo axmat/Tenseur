@@ -9,5 +9,6 @@
 #include <Ten/Kernels/Host>
 // Implementation
 #include <Ten/Tensor.hxx>
+#include <Ten/Random.hxx>
 
 #endif

@@ -2,6 +2,7 @@
 
 #include "Cast.hxx"
 #include "Traits.hxx"
+#include "Random.hxx"
 
 int main(int argc, char **argv) {
 

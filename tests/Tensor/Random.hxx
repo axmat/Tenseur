@@ -1,0 +1,16 @@
+#ifndef TENSEUR_TESTS_TENSOR_RANDOM
+#define TENSEUR_TESTS_TENSOR_RANDOM
+
+#include <Ten/Tensor>
+#include <Ten/Tests/Tests.hxx>
+
+TEST(Random, RandomFloatTensor) {
+   using namespace ten;
+
+   size_t seed = 1234;
+   auto x = rand<StaticMatrix<float, 2, 3>>(seed);
+   auto y = rand<Matrix<float>>({2, 3}, seed);
+   ASSERT_TRUE(tests::same_values(x, y));
+}
+
+#endif
