@@ -9,18 +9,23 @@ A header only C++20 tensor library [WIP]
 - Lazy evaluation of expressions
 - BLAS backend for high performance numerical linear algebra
 - Chain expressions
+- Factory functions: fill, ones, zeros, iota, rand
 
 ### Todo
-- Untyped tensor
+- Compile to a shared library
+- Tests for shared library
+- Basic python bindings
 - Tests
 - CI/CD
-- Operators precedence
 - Check tensor shapes at compile time whenever possible
 - Sparse tensors
 - Special matrices
 - Automatic differentiation
-- Python binding
-- Sphinx documentation
+- Python documentation
+- C++ API documentation
+- Untyped tensor
+- Operators precedence
+- Inplace operations
 
 ## Example
 ```
