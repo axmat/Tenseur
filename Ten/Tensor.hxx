@@ -607,6 +607,13 @@ template <class T, size_type Size, StorageOrder order = defaultOrder,
    requires(Size > 0)
 using StaticVector = RankedTensor<T, Shape<Size>, order, Storage, Allocator>;
 
+// Type alias SVector<T, size>
+template <class T, size_type Size, StorageOrder order = defaultOrder,
+          class Storage = DefaultStorage<T, Shape<Size>>,
+          class Allocator = details::AllocatorType<Storage>::type>
+   requires(Size > 0)
+using SVector = StaticVector<T, Size, order, Storage, Allocator>;
+
 // Matrix<T> or Matrix<T, Shape>
 template <class T, class Shape = DynamicShape<2>,
           StorageOrder order = defaultOrder,
@@ -614,14 +621,6 @@ template <class T, class Shape = DynamicShape<2>,
           class Allocator = details::AllocatorType<Storage>::type>
    requires(Shape::rank() == 2)
 using Matrix = RankedTensor<T, Shape, order, Storage, Allocator>;
-
-/*
-template<class T, StorageOrder order = defaultOrder,
-   class Storage = DefaultStorage<T, DynamicShape<2>>,
-   class Allocator = details::AllocatorType<Storage>::type>
-auto matrix(size_t rows, size_t cols) {
-   return Tensor<T, DynamicShape<2>, order, Storage, Allocator>({rows, cols});
-}*/
 
 // StaticMatrix<T, rows, cols>
 template <class T, size_type rows, size_type cols,
@@ -631,17 +630,29 @@ template <class T, size_type rows, size_type cols,
 using StaticMatrix =
     RankedTensor<T, Shape<rows, cols>, order, Storage, Allocator>;
 
+// Type alias SMatrix
+template <class T, size_type rows, size_type cols,
+          StorageOrder order = defaultOrder,
+          class Storage = DefaultStorage<T, Shape<rows, cols>>,
+          class Allocator = details::AllocatorType<Storage>::type>
+using SMatrix = StaticMatrix<T, rows, cols, order, Storage, Allocator>;
+
 /// \typedef Tensor
+/// Tensor<T, Rank>
 template <class T, size_type Rank, StorageOrder order = defaultOrder,
           class Storage = DefaultStorage<T, DynamicShape<Rank>>,
           class Allocator = details::AllocatorType<Storage>::type>
 using Tensor = RankedTensor<T, DynamicShape<Rank>, order, Storage, Allocator>;
 
-// Static tensor
+// StaticTensor<T, dims...>
 template <class T, size_type... dims>
 using StaticTensor = RankedTensor<
     T, Shape<dims...>, defaultOrder, DefaultStorage<T, Shape<dims...>>,
     typename details::AllocatorType<DefaultStorage<T, Shape<dims...>>>::type>;
+
+// Type alias STensor<T, dims...>
+template <class T, size_type... dims>
+using StaticTensor = StaticTensor<T, dims...>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Basic functions
