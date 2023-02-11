@@ -99,7 +99,7 @@ int main() {
       }
       auto c = (a - b).eval();
       printTensor(c);
-      static_assert(std::is_same_v<decltype(c), DynamicTensor<float, 1>>);
+      static_assert(std::is_same_v<decltype(c), Tensor<float, 1>>);
    }
 
    {
@@ -108,7 +108,7 @@ int main() {
       auto b = iota<Vector<float>>(6);
       auto c = (a * b).eval();
       printTensor(c);
-      static_assert(std::is_same_v<decltype(c), DynamicTensor<float, 1>>);
+      static_assert(std::is_same_v<decltype(c), Tensor<float, 1>>);
    }
 
    {
@@ -137,7 +137,7 @@ int main() {
          }
          cout << endl;
       }
-      static_assert(std::is_same_v<decltype(c), DynamicTensor<float, 2>>);
+      static_assert(std::is_same_v<decltype(c), Tensor<float, 2>>);
    }
 
    {
@@ -162,7 +162,7 @@ int main() {
          std::cout << c[j] << " ";
       }
       cout << endl;
-      static_assert(std::is_same_v<decltype(c), DynamicTensor<float, 1>>);
+      static_assert(std::is_same_v<decltype(c), Tensor<float, 1>>);
    }
 
    {
@@ -170,7 +170,7 @@ int main() {
       auto a = iota<Vector<float>>(5);
       auto c = (2. * a).eval();
       printTensor(c);
-      static_assert(std::is_same_v<decltype(c), DynamicTensor<float, 1>>);
+      static_assert(std::is_same_v<decltype(c), Tensor<float, 1>>);
    }
 
    {

@@ -12,7 +12,7 @@ template <typename...> struct VariadicStruct {};
 TEST(Traits, isTensor) {
    using namespace ten;
 
-   using Tensor_t = DynamicTensor<float, 3>;
+   using Tensor_t = Tensor<float, 3>;
    ASSERT_TRUE(isTensor<Tensor_t>::value);
 
    ASSERT_TRUE(!isTensor<int>::value);

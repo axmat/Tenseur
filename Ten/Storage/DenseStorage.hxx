@@ -24,6 +24,8 @@ template <typename T, typename Allocator> class DenseStorage final {
    T *_data = nullptr;
 
  public:
+   DenseStorage() noexcept {}
+
    DenseStorage(size_type size) noexcept
        : _size(size),
          _data(allocator_traits::allocate(_allocator, size * sizeof(T))) {}

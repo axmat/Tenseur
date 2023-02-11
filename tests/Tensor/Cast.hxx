@@ -7,12 +7,11 @@
 
 template <class From, class To, size_t... dims>
 testing::AssertionResult testCastStaticTensor() {
-   using shape_type = ::ten::Shape<dims...>;
-   using tensor_type = ::ten::Tensor<From, shape_type>;
+   using tensor_type = ::ten::StaticTensor<From, dims...>;
    tensor_type a = ::ten::iota<tensor_type>();
    auto b = ::ten::cast<To>(a);
    // Types
-   testing::StaticAssertTypeEq<decltype(b), ::ten::Tensor<To, shape_type>>();
+   testing::StaticAssertTypeEq<decltype(b), ::ten::StaticTensor<To, dims...>>();
    // Values
    return ::ten::tests::same_values(a, b);
 }

@@ -298,7 +298,7 @@ class TensorNode
    using base_type = TensorOperations<T, Shape, Order, Allocator, Storage>;
 
    /// Tensor type
-   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   using tensor_type = RankedTensor<T, Shape, Order, Storage, Allocator>;
 
    using scalarnode_type = ScalarNode<T>;
 
@@ -306,9 +306,9 @@ class TensorNode
 
  private:
    /// Optional shape (only for dynamic tensors)
-   std::optional<Shape> _shape;
+   std::optional<Shape> _shape = std::nullopt;
    /// optional stride (only for dynamic tensors)
-   std::optional<stride_type> _stride;
+   std::optional<stride_type> _stride = std::nullopt;
    /// Storage
    std::shared_ptr<Storage> _storage = nullptr;
    /// Is transposed
@@ -358,7 +358,6 @@ class TensorNode
  public:
    /// Construct a static TensorNode
    TensorNode() noexcept
-      requires(Shape::isStatic())
        : _shape(std::nullopt), _stride(std::nullopt), _storage(new Storage()) {}
 
    /// Construct a TensorNode from a list of shape
@@ -432,6 +431,13 @@ class TensorNode
    operator()(auto... index) noexcept {
       return at(index...);
    }
+
+   // Resize
+   void resize(std::initializer_list<size_type> &&dims) {
+      _shape = Shape(std::move(dims));
+      _stride = stride_type(_shape.value());
+      _storage.reset(new Storage(_shape.value().size()));
+   }
 };
 
 namespace details {
@@ -450,18 +456,20 @@ struct AllocatorType<::ten::StaticDenseStorage<T, Shape>> {
 template <class T, class Shape, StorageOrder Order = defaultOrder,
           class Storage = DefaultStorage<T, Shape>,
           class Allocator = details::AllocatorType<Storage>::type>
-class Tensor final
-    : public Expr<Tensor<T, Shape, Order, Storage, Allocator>>,
-      public TensorOperations<T, Shape, Order, Storage, Allocator> {
+class RankedTensor final
+    : public Expr<RankedTensor<T, Shape, Order, Storage, Allocator>>,
+      public TensorOperations<T, Shape, Order, Storage, Allocator>,
+      public TensorBase {
  public:
    // Type of the casted tensor
    // T must be convertible to To
    template <typename To>
       requires std::convertible_to<T, To>
    using casted_type =
-       Tensor<To, Shape, Order, typename Storage::template casted_type<To>,
-              typename details::AllocatorType<
-                  typename Storage::template casted_type<To>>::type>;
+       RankedTensor<To, Shape, Order,
+                    typename Storage::template casted_type<To>,
+                    typename details::AllocatorType<
+                        typename Storage::template casted_type<To>>::type>;
 
    /// \typedef base_type
    /// Type of the tensor operations.
@@ -478,33 +486,31 @@ class Tensor final
 
  public:
    /// Constructor for static Tensor
-   Tensor() noexcept
-      requires(Shape::isStatic())
-       : _node(std::make_shared<node_type>()) {}
+   RankedTensor() noexcept : _node(std::make_shared<node_type>()) {}
 
    /// Constructor for Tensor with a storage of type Ten::DenseStorage
-   explicit Tensor(std::initializer_list<size_type> &&shape) noexcept
+   explicit RankedTensor(std::initializer_list<size_type> &&shape) noexcept
       requires(Shape::isDynamic())
        : _node(std::make_shared<node_type>(std::move(shape))) {}
 
    /// Constructor of Tensor from shape
-   explicit Tensor(const Shape &shape) noexcept
+   explicit RankedTensor(const Shape &shape) noexcept
        : _node(std::make_shared<node_type>(shape)) {}
 
    /// Constructor of Tensor from a shared pointer to TensorNode
-   Tensor(const std::shared_ptr<node_type> &node) : _node(node) {}
+   RankedTensor(const std::shared_ptr<node_type> &node) : _node(node) {}
 
    /// Asignment from an expression
    /// FIXME convert from any compatible output type
    template <class Expr>
       requires(::ten::isUnaryExpr<std::remove_cvref_t<Expr>>::value ||
                ::ten::isBinaryExpr<std::remove_cvref_t<Expr>>::value)
-   Tensor(Expr &&expr) {
+   RankedTensor(Expr &&expr) {
       _node = expr.eval().node();
    }
 
    /// Vector
-   explicit Tensor(size_type size) noexcept
+   explicit RankedTensor(size_type size) noexcept
       requires(Shape::isDynamic() && Shape::rank() == 1)
    {
       _node =
@@ -512,7 +518,7 @@ class Tensor final
    }
 
    /// Matrix
-   explicit Tensor(size_type rows, size_type cols) noexcept
+   explicit RankedTensor(size_type rows, size_type cols) noexcept
       requires(Shape::isDynamic() && Shape::rank() == 2)
    {
       _node = std::make_shared<node_type>(
@@ -520,15 +526,15 @@ class Tensor final
    }
 
    /// Assignment operator
-   Tensor(const Tensor &t) { _node = t._node; }
+   RankedTensor(const RankedTensor &t) { _node = t._node; }
 
-   Tensor(Tensor &&) = default;
+   RankedTensor(RankedTensor &&) = default;
 
-   Tensor &operator=(const Tensor &t) {
+   RankedTensor &operator=(const RankedTensor &t) {
       _node = t._node;
       return *this;
    }
-   Tensor &operator=(Tensor &&t) = default;
+   RankedTensor &operator=(RankedTensor &&t) = default;
 
    // TODO Iterators
 
@@ -580,20 +586,26 @@ class Tensor final
    [[nodiscard]] bool isTransposed() const {
       return _node.get()->isTransposed();
    }
+
+   // Resize
+   void resize(std::initializer_list<size_type> &&dims) {
+      _node.get()->resize(std::move(dims));
+   }
 };
 
 // Vector<T>
 template <class T, StorageOrder order = defaultOrder,
           class Storage = DefaultStorage<T, Shape<::ten::dynamic>>,
           class Allocator = details::AllocatorType<Storage>::type>
-using Vector = Tensor<T, Shape<::ten::dynamic>, order, Storage, Allocator>;
+using Vector =
+    RankedTensor<T, Shape<::ten::dynamic>, order, Storage, Allocator>;
 
 // StaticVector<T, size>
 template <class T, size_type Size, StorageOrder order = defaultOrder,
           class Storage = DefaultStorage<T, Shape<Size>>,
           class Allocator = details::AllocatorType<Storage>::type>
    requires(Size > 0)
-using StaticVector = Tensor<T, Shape<Size>, order, Storage, Allocator>;
+using StaticVector = RankedTensor<T, Shape<Size>, order, Storage, Allocator>;
 
 // Matrix<T> or Matrix<T, Shape>
 template <class T, class Shape = DynamicShape<2>,
@@ -601,7 +613,7 @@ template <class T, class Shape = DynamicShape<2>,
           class Storage = DefaultStorage<T, Shape>,
           class Allocator = details::AllocatorType<Storage>::type>
    requires(Shape::rank() == 2)
-using Matrix = Tensor<T, Shape, order, Storage, Allocator>;
+using Matrix = RankedTensor<T, Shape, order, Storage, Allocator>;
 
 /*
 template<class T, StorageOrder order = defaultOrder,
@@ -616,23 +628,20 @@ template <class T, size_type rows, size_type cols,
           StorageOrder order = defaultOrder,
           class Storage = DefaultStorage<T, Shape<rows, cols>>,
           class Allocator = details::AllocatorType<Storage>::type>
-using StaticMatrix = Tensor<T, Shape<rows, cols>, order, Storage, Allocator>;
+using StaticMatrix =
+    RankedTensor<T, Shape<rows, cols>, order, Storage, Allocator>;
 
-/// \typedef DynamicTensor
-/// FIXME remove/rename for consistency
+/// \typedef Tensor
 template <class T, size_type Rank, StorageOrder order = defaultOrder,
           class Storage = DefaultStorage<T, DynamicShape<Rank>>,
           class Allocator = details::AllocatorType<Storage>::type>
-using DynamicTensor = Tensor<T, DynamicShape<Rank>, order, Storage, Allocator>;
-
-// TODO RankedTensor<T, Rank, ...>
-// Tensor<T, Rank> = Tensor<T, DynamicShape<Rank>>
-// StaticTensor<T, dims...> = RankedTensor<T, Rank, Shape<>>
+using Tensor = RankedTensor<T, DynamicShape<Rank>, order, Storage, Allocator>;
 
 // Static tensor
-// FIXME Order?
-// template <typename T, size_type...dims>
-// using StaticTensor = Tensor<T, Shape<dims...>>;
+template <class T, size_type... dims>
+using StaticTensor = RankedTensor<
+    T, Shape<dims...>, defaultOrder, DefaultStorage<T, Shape<dims...>>,
+    typename details::AllocatorType<DefaultStorage<T, Shape<dims...>>>::type>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Basic functions
@@ -720,11 +729,11 @@ template <class T>
 template <class T, class Shape, StorageOrder Order = defaultOrder,
           class Storage = DefaultStorage<T, Shape>,
           class Allocator = typename details::AllocatorType<Storage>::type>
-   requires(
-       ::ten::isStaticStorage<Storage>::value &&
-       ::ten::isDenseTensor<Tensor<T, Shape, Order, Storage, Allocator>>::value)
+   requires(::ten::isStaticStorage<Storage>::value &&
+            ::ten::isDenseTensor<
+                RankedTensor<T, Shape, Order, Storage, Allocator>>::value)
 [[nodiscard]] auto fill(T value) {
-   return fill<Tensor<T, Shape, Order, Storage, Allocator>>(value);
+   return fill<RankedTensor<T, Shape, Order, Storage, Allocator>>(value);
 }
 
 // fill<Tensor<...>>(shape, value)
@@ -757,10 +766,10 @@ template <
     class Storage = ::ten::DefaultStorage<T, Shape>,
     class Allocator = typename ::ten::details::AllocatorType<Storage>::type>
    requires(::ten::isDynamicTensor<
-                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+                RankedTensor<T, Shape, Order, Storage, Allocator>>::value &&
             ::ten::isDenseStorage<Storage>::value)
 [[nodiscard]] auto fill(Shape &&shape, T value) {
-   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   using tensor_type = RankedTensor<T, Shape, Order, Storage, Allocator>;
    return fill<tensor_type>(std::forward<Shape>(shape), value);
 }
 
@@ -769,10 +778,10 @@ template <
     class Storage = ::ten::DefaultStorage<T, Shape>,
     class Allocator = typename ::ten::details::AllocatorType<Storage>::type>
    requires(::ten::isDynamicTensor<
-                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+                RankedTensor<T, Shape, Order, Storage, Allocator>>::value &&
             ::ten::isDenseStorage<Storage>::value)
 [[nodiscard]] auto fill(std::initializer_list<size_type> &&dims, T value) {
-   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   using tensor_type = RankedTensor<T, Shape, Order, Storage, Allocator>;
    using shape_type = typename tensor_type::shape_type;
    return fill<tensor_type>(shape_type(std::move(dims)), value);
 }
@@ -804,10 +813,10 @@ template <class T, class Shape, StorageOrder Order = defaultOrder,
           class Storage = DefaultStorage<T, Shape>,
           class Allocator = typename details::AllocatorType<Storage>::type>
    requires(::ten::isStaticTensor<
-                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+                RankedTensor<T, Shape, Order, Storage, Allocator>>::value &&
             ::ten::isDenseStorage<Storage>::value)
 [[nodiscard]] auto zeros() {
-   return zeros<Tensor<T, Shape, Order, Storage, Allocator>>();
+   return zeros<RankedTensor<T, Shape, Order, Storage, Allocator>>();
 }
 
 // zeros<Tensor<...>>(shape)
@@ -834,10 +843,10 @@ template <
     class Storage = ::ten::DefaultStorage<T, Shape>,
     class Allocator = typename ::ten::details::AllocatorType<Storage>::type>
    requires(::ten::isDynamicTensor<
-                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+                RankedTensor<T, Shape, Order, Storage, Allocator>>::value &&
             ::ten::isDenseStorage<Storage>::value)
 [[nodiscard]] auto zeros(Shape &&shape) {
-   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   using tensor_type = RankedTensor<T, Shape, Order, Storage, Allocator>;
    return zeros<tensor_type>(std::forward<Shape>(shape));
 }
 
@@ -846,10 +855,10 @@ template <
     class Storage = ::ten::DefaultStorage<T, Shape>,
     class Allocator = typename ::ten::details::AllocatorType<Storage>::type>
    requires(::ten::isDynamicTensor<
-                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+                RankedTensor<T, Shape, Order, Storage, Allocator>>::value &&
             ::ten::isDenseStorage<Storage>::value)
 [[nodiscard]] auto zeros(std::initializer_list<size_type> &&dims) {
-   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   using tensor_type = RankedTensor<T, Shape, Order, Storage, Allocator>;
    using shape_type = typename tensor_type::shape_type;
    return zeros<tensor_type>(shape_type(std::move(dims)));
 }
@@ -881,10 +890,10 @@ template <class T, class Shape, StorageOrder Order = defaultOrder,
           class Storage = DefaultStorage<T, Shape>,
           class Allocator = typename details::AllocatorType<Storage>::type>
    requires(::ten::isStaticTensor<
-                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+                RankedTensor<T, Shape, Order, Storage, Allocator>>::value &&
             ::ten::isDenseStorage<Storage>::value)
 [[nodiscard]] auto ones() {
-   return ones<Tensor<T, Shape, Order, Storage, Allocator>>();
+   return ones<RankedTensor<T, Shape, Order, Storage, Allocator>>();
 }
 
 // ones<Tensor<...>>(shape)
@@ -911,10 +920,10 @@ template <
     class Storage = ::ten::DefaultStorage<T, Shape>,
     class Allocator = typename ::ten::details::AllocatorType<Storage>::type>
    requires(::ten::isDynamicTensor<
-                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+                RankedTensor<T, Shape, Order, Storage, Allocator>>::value &&
             ::ten::isDenseStorage<Storage>::value)
 [[nodiscard]] auto ones(Shape &&shape) {
-   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   using tensor_type = RankedTensor<T, Shape, Order, Storage, Allocator>;
    return ones<tensor_type>(std::forward<Shape>(shape));
 }
 
@@ -923,10 +932,10 @@ template <
     class Storage = ::ten::DefaultStorage<T, Shape>,
     class Allocator = typename ::ten::details::AllocatorType<Storage>::type>
    requires(::ten::isDynamicTensor<
-                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+                RankedTensor<T, Shape, Order, Storage, Allocator>>::value &&
             ::ten::isDenseStorage<Storage>::value)
 [[nodiscard]] auto ones(std::initializer_list<size_type> &&dims) {
-   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   using tensor_type = RankedTensor<T, Shape, Order, Storage, Allocator>;
    using shape_type = typename tensor_type::shape_type;
    return ones<tensor_type>(shape_type(std::move(dims)));
 }
@@ -963,10 +972,10 @@ template <class T, class Shape, StorageOrder Order = defaultOrder,
           class Storage = DefaultStorage<T, Shape>,
           class Allocator = typename details::AllocatorType<Storage>::type>
    requires(::ten::isStaticTensor<
-                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+                RankedTensor<T, Shape, Order, Storage, Allocator>>::value &&
             ::ten::isDenseStorage<Storage>::value)
 [[nodiscard]] auto iota(T value = T(0)) {
-   return iota<Tensor<T, Shape, Order, Storage, Allocator>>(value);
+   return iota<RankedTensor<T, Shape, Order, Storage, Allocator>>(value);
 }
 
 // iota<Tensor<...>>(shape, value)
@@ -1012,10 +1021,10 @@ template <
     class Storage = ::ten::DefaultStorage<T, Shape>,
     class Allocator = typename ::ten::details::AllocatorType<Storage>::type>
    requires(::ten::isDynamicTensor<
-                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+                RankedTensor<T, Shape, Order, Storage, Allocator>>::value &&
             ::ten::isDenseStorage<Storage>::value)
 [[nodiscard]] auto iota(Shape &&shape, T value = T(0)) {
-   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   using tensor_type = RankedTensor<T, Shape, Order, Storage, Allocator>;
    return iota<tensor_type>(std::forward<Shape>(shape), value);
 }
 
@@ -1024,11 +1033,11 @@ template <
     class Storage = ::ten::DefaultStorage<T, Shape>,
     class Allocator = typename ::ten::details::AllocatorType<Storage>::type>
    requires(::ten::isDynamicTensor<
-                Tensor<T, Shape, Order, Storage, Allocator>>::value &&
+                RankedTensor<T, Shape, Order, Storage, Allocator>>::value &&
             ::ten::isDenseStorage<Storage>::value)
 [[nodiscard]] auto iota(std::initializer_list<size_type> &&dims,
                         T value = T(0)) {
-   using tensor_type = Tensor<T, Shape, Order, Storage, Allocator>;
+   using tensor_type = RankedTensor<T, Shape, Order, Storage, Allocator>;
    using shape_type = typename tensor_type::shape_type;
    return iota<tensor_type>(shape_type(std::move(dims)), value);
 }
