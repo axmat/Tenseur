@@ -652,7 +652,7 @@ using StaticTensor = RankedTensor<
 
 // Type alias STensor<T, dims...>
 template <class T, size_type... dims>
-using StaticTensor = StaticTensor<T, dims...>;
+using STensor = StaticTensor<T, dims...>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Basic functions
