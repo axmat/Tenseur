@@ -1,4 +1,3 @@
-# Nanobench
 include(FetchContent)
 
 FetchContent_Declare(
@@ -9,9 +8,5 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(nanobench)
 
-find_package(BLAS)
-
-# Tenseur
 add_subdirectory(tenseur)
 add_subdirectory(eigen)
-
