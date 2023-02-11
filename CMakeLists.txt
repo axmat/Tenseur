@@ -12,19 +12,23 @@ include(GNUInstallDirs)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -march=native")
 
-# Library
-add_library(Tenseur INTERFACE)
-target_include_directories(
-  Tenseur
-  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Ten>
+# Build shared library
+option(TENSEUR_SHAREDLIB "Build shared Library." OFF)
+
+if (TENSEUR_SHAREDLIB)
+   # FIXME add_library(Tenseur SHARED ${PROJECT_SOURCE_DIR}/Ten/Tensor.cxx)
+	#set_target_properties(Tenseur PROPERTIES POSITION_INDEPENDANT_CODE ON)
+   #target_include_directories(Tenseur PRIVATE ${PROJECT_SOURCE_DIR})
+else()
+   add_library(Tenseur INTERFACE)
+   target_include_directories(
+     Tenseur
+     INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Ten>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-)
-
-# TODO Debug
-#message("Project source dir = ${PROJECT_SOURCE_DIR}")
-
-# Compiler features
-target_compile_features(Tenseur INTERFACE cxx_std_20)
+   )
+   # Compiler features
+   target_compile_features(Tenseur INTERFACE cxx_std_20)
+endif()
 
 # Target paths
 install(TARGETS Tenseur
@@ -65,18 +69,27 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/Ten DESTINATION include)
 # Build the tests
 option(TENSEUR_TESTS "Build tests." OFF)
 if (TENSEUR_TESTS)
-  add_subdirectory(Tests)
+  add_subdirectory(tests)
 endif()
 
 # Build the examples
 option(TENSEUR_EXAMPLES "Build examples." OFF)
 if (TENSEUR_EXAMPLES)
-  add_subdirectory(Examples)
+  add_subdirectory(examples)
 endif()
 
 # Build the docs
 option(TENSEUR_DOCS "Build documentation." OFF)
 if (TENSEUR_DOCS)
-  add_subdirectory(Docs)
+  add_subdirectory(docs)
 endif()
+
+# Build the benchmarks
+option(TENSEUR_BENCHMARKS "Build documentation." OFF)
+if (TENSEUR_BENCHMARKS)
+  add_subdirectory(benchmarks)
+endif()
+
+# TODO Python bindings
+# add_subdirectory(bindings)
 
