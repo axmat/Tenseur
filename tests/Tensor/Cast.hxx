@@ -2,7 +2,7 @@
 #define TENSEUR_TESTS_TENSOR_CAST
 
 #include <Ten/Tensor.hxx>
-#include <Ten/Tests/Tests.hxx>
+#include <Ten/Tests.hxx>
 #include <Ten/Types.hxx>
 
 template <class From, class To, size_t... dims>

@@ -2,7 +2,7 @@
 #define TENSEUR_TESTS_TENSOR_RANDOM
 
 #include <Ten/Tensor>
-#include <Ten/Tests/Tests.hxx>
+#include <Ten/Tests.hxx>
 
 TEST(Random, RandomFloatTensor) {
    using namespace ten;
