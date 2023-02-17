@@ -12,9 +12,12 @@ A header only C++20 tensor library [WIP]
 - Factory functions: fill, ones, zeros, iota, rand
 
 ### Todo
+- Shape and strides for static row major tensors
+- Make raw major default?
 - Compile to a shared library
 - Tests for shared library
-- Basic python bindings
+- Generate automatic python bindings
+- Pythonizations
 - Tests
 - CI/CD
 - Check tensor shapes at compile time whenever possible
@@ -26,6 +29,11 @@ A header only C++20 tensor library [WIP]
 - Untyped tensor
 - Operators precedence
 - Inplace operations
+
+### Requirements
+- Clang compiler with C++20 support
+- CMake
+- BLAS library (OpenBlas or BLIS)
 
 ## Example
 ```
