@@ -6,6 +6,7 @@
 #include <iostream>
 #include <memory>
 #include <type_traits>
+#include <concepts>
 
 namespace ten {
 /// \enum format

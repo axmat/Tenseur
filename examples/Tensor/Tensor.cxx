@@ -462,5 +462,19 @@ int main() {
       printTensor(x);
    }
 
+   {
+      cout << "ColMajor tensor" << endl;
+      Tensor<float, 3, StorageOrder::ColMajor> x({2, 3, 4});
+      cout << "shape = " << x.shape() << endl;
+      cout << "strides = " << x.strides() << endl;
+   }
+
+   {
+      cout << "RowMajor tensor" << endl;
+      Tensor<float, 3, StorageOrder::RowMajor> x({2, 3, 4});
+      cout << "shape = " << x.shape() << endl;
+      cout << "strides = " << x.strides() << endl;
+   }
+
    return 0;
 }

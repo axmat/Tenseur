@@ -323,7 +323,6 @@ template <class Shape> struct DynamicReshape {
 
       B::shape_type outputShape(const A::shape_type &) { return _shape; }
 
-      // FIXME shape ?
       void operator()(const A &left, B &right) {
          right = B(left.storage(), _shape);
       }

@@ -186,6 +186,7 @@ class Scalar : public Expr<Scalar<T>>, public ScalarOperations<Scalar<T>> {
  public:
    explicit Scalar(const T &value)
        : _node(std::make_shared<node_type>(value)) {}
+
    explicit Scalar(T &&value)
        : _node(std::make_shared<node_type>(std::move(value))) {}
 
@@ -405,6 +406,10 @@ class TensorNode
 
    [[nodiscard]] const Shape &shape() const { return _shape.value(); }
 
+   [[nodiscard]] inline const typename base_type::stride_type &strides() const {
+      return _stride.value();
+   }
+
    [[nodiscard]] T *data() { return _storage.get()->data(); }
    [[nodiscard]] const T *data() const { return _storage.get()->data(); }
 
@@ -543,6 +548,11 @@ class RankedTensor final
       return _node.get()->shape();
    }
 
+   /// Returns the strides
+   [[nodiscard]] inline const typename base_type::stride_type &strides() const {
+      return _node.get()->strides();
+   }
+
    /// Returns the dynamic size
    [[nodiscard]] inline size_type size() const { return _node.get()->size(); }
 
@@ -651,8 +661,7 @@ using StaticTensor = RankedTensor<
     typename details::AllocatorType<DefaultStorage<T, Shape<dims...>>>::type>;
 
 // Type alias STensor<T, dims...>
-template <class T, size_type... dims>
-using STensor = StaticTensor<T, dims...>;
+template <class T, size_type... dims> using STensor = StaticTensor<T, dims...>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Basic functions

@@ -199,7 +199,35 @@ template <size_type First, size_type... Rest> class Shape {
       }
       return true;
    }
+
+   // overload << operator
+   template <size_type... Ts>
+   friend std::ostream &operator<<(std::ostream &, const Shape<Ts...> &);
 };
+
+namespace details {
+template <size_type N, size_type... Ts>
+void printShape(std::ostream &os, const Shape<Ts...> &shape) {
+   using shape_type = Shape<Ts...>;
+
+   if constexpr (shape_type::template isStaticDim<N>()) {
+      os << shape_type::template staticDim<N>();
+   } else {
+      os << shape.dim(N);
+   }
+
+   if constexpr (N + 1 < shape_type::rank()) {
+      os << "x";
+      printShape<N + 1, Ts...>(os, shape);
+   }
+}
+} // namespace details
+
+template <size_type... Ts>
+std::ostream &operator<<(std::ostream &os, const Shape<Ts...> &shape) {
+   details::printShape<0, Ts...>(os, shape);
+   return os;
+}
 
 namespace details {
 // Compute the Nth static stride
@@ -230,6 +258,12 @@ template <class S, StorageOrder order> consteval auto computeStaticStrides() {
 template <typename S, StorageOrder order> auto computeStrides(const S &shape) {
    constexpr size_type n = S::rank();
    std::array<size_type, n> strides{};
+   if constexpr (order == StorageOrder::RowMajor) {
+      strides[n - 1] = 1;
+      for (size_type i = n - 1; i > 0; i--) {
+         strides[i - 1] = shape.dim(i) * strides[i];
+      }
+   }
    if constexpr (order == StorageOrder::ColMajor) {
       strides[0] = 1;
       for (size_type i = 1; i < n; i++)
@@ -271,7 +305,34 @@ template <class S, StorageOrder order> class Stride {
 
    /// Returns the rank (number of dimensions)
    [[nodiscard]] inline static constexpr size_type rank() { return S::rank(); }
+
+   // Overload the << operator
+   template <class T, StorageOrder R>
+   friend std::ostream &operator<<(std::ostream &os, const Stride<S, R> &);
 };
+
+namespace details {
+template <size_type N, class S, StorageOrder order>
+void printStride(std::ostream &os, const Stride<S, order> &strides) {
+   using stride_type = Stride<S, order>;
+
+   if constexpr (S::isStatic()) {
+      os << stride_type::template staticDim<N>();
+   } else {
+      os << strides.dim(N);
+   }
+   if constexpr (N + 1 < S::rank()) {
+      os << "x";
+      printStride<N + 1, S, order>(os, strides);
+   }
+}
+} // namespace details
+
+template <class S, StorageOrder order>
+std::ostream &operator<<(std::ostream &os, const Stride<S, order> &strides) {
+   details::printStride<0, S, order>(os, strides);
+   return os;
+}
 
 } // namespace ten
 #endif
