@@ -94,7 +94,7 @@ template <class A, class B = typename A::scalarnode_type> struct Max : Func<> {
 namespace details {
 template <class, class> struct CommonType;
 
-template <VectorNode A, VectorNode B>
+template <::ten::traits::TensorNode A, ::ten::traits::TensorNode B>
    requires SameShape<A, B> && SameStorageOrder<A, B> && SameStorage<A, B> &&
             SameAllocator<A, B>
 struct CommonType<A, B> {
@@ -117,8 +117,6 @@ template <BinaryOperation kind> struct BinaryFunc {
 
    template <class A, class B, class C = details::common_type_t<A, B>>
    struct Func : ::ten::functional::Func<> {
-      static_assert(A::isVector() && B::isVector(),
-                    "Expected A and B to be vectors.");
 
       using output_type = C;
 
@@ -131,22 +129,26 @@ template <BinaryOperation kind> struct BinaryFunc {
       static auto outputShape(const A &a, const B &b) { return a.shape(); }
 
       static void operator()(const A &left, const B &right, C &result) {
-         size_t n = left.size();
-         using value_type = typename C::value_type;
-         for (size_t i = 0; i < n; i++) {
-            switch (kind) {
-            case BinaryOperation::add:
-               result[i] = static_cast<value_type>(left[i]) +
-                           static_cast<value_type>(right[i]);
-               break;
-            case BinaryOperation::sub:
-               result[i] = static_cast<value_type>(left[i]) -
-                           static_cast<value_type>(right[i]);
-               break;
-            case BinaryOperation::div:
-               result[i] = static_cast<value_type>(left[i]) /
-                           static_cast<value_type>(right[i]);
-               break;
+         if (kind == BinaryOperation::add) {
+            ::ten::kernels::add(left, right, result);
+         } else {
+            size_t n = left.size();
+            using value_type = typename C::value_type;
+            for (size_t i = 0; i < n; i++) {
+               switch (kind) {
+               case BinaryOperation::add:
+                  result[i] = static_cast<value_type>(left[i]) +
+                              static_cast<value_type>(right[i]);
+                  break;
+               case BinaryOperation::sub:
+                  result[i] = static_cast<value_type>(left[i]) -
+                              static_cast<value_type>(right[i]);
+                  break;
+               case BinaryOperation::div:
+                  result[i] = static_cast<value_type>(left[i]) /
+                              static_cast<value_type>(right[i]);
+                  break;
+               }
             }
          }
       }

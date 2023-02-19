@@ -51,6 +51,7 @@ auto operator+(LeftExpr &&left, RightExpr &&right) {
 
 template <typename T, typename E>
    requires ::ten::isExpr<std::remove_cvref_t<E>>
+&& std::is_floating_point_v<T>
 auto operator+(T &&scalar, E &&expr) {
    using R = std::remove_cvref_t<E>;
    return Scalar<T>(scalar) + std::forward<R>(expr);
@@ -58,6 +59,7 @@ auto operator+(T &&scalar, E &&expr) {
 
 template <typename E, typename T>
    requires ::ten::isExpr<std::remove_cvref_t<E>>
+&& std::is_floating_point_v<T>
 auto operator+(E &&expr, T &&scalar) {
    using R = std::remove_cvref_t<E>;
    return std::forward<R>(expr) + Scalar<T>(scalar);

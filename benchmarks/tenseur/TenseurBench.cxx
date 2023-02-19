@@ -29,6 +29,17 @@ int main(int argc, char **argv) {
       });
    }
 
+   for (auto N : sizes) {
+      auto a = iota<Matrix<float>>({N, N});
+      auto b = iota<Matrix<float>>({N, N});
+      auto c = zeros<Matrix<float>>({N, N});
+      bench.run("Sum", [&] { c = a + b; });
+      bench.run("Sum2", [&] {
+         Matrix<float> d = a + b;
+         ankerl::nanobench::doNotOptimizeAway(d);
+      });
+   }
+
    std::ofstream file(fileName + ".csv");
    ankerl::nanobench::render(ankerl::nanobench::templates::csv(), bench, file);
 

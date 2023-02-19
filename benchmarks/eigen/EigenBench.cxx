@@ -32,6 +32,9 @@ int main(int argc, char **argv) {
 
       bench.run("Gemm", [&] { c = a * b; });
       bench.run("Gemm2", [&] { MatrixXf d = a * b; });
+
+      bench.run("Sum", [&] { c = a + b; });
+      bench.run("Sum2", [&] { MatrixXf d = a * b; });
    }
 
    std::ofstream file(fileName + ".csv");
