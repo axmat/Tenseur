@@ -21,7 +21,7 @@ auto getEngine = [](const std::optional<size_t> seed) -> decltype(auto) {
 }
 
 namespace ten {
-// Random dynamic tensor
+// Random tensor
 template <class T,
           class Distribution = std::normal_distribution<typename T::value_type>,
           class RandomEngine = std::mt19937>

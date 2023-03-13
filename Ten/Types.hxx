@@ -271,6 +271,11 @@ concept ScalarNode = isScalarNode<T>::value;
 template <typename T>
 concept TensorNode = isTensorNode<T>::value;
 } // namespace traits
+
+
+// Binary operation
+enum class BinaryOperation { add, sub, div, mul};
+
 } // namespace ten
 
 namespace ten::stack {

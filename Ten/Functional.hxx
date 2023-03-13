@@ -7,8 +7,8 @@
 #include <memory>
 #include <type_traits>
 
-#include <Ten/Kernels/Host>
 #include <Ten/Types.hxx>
+#include <Ten/Kernels/Host>
 
 namespace ten::functional {
 // Functions types
@@ -109,9 +109,6 @@ template <class A, class B>
 using common_type_t = typename CommonType<A, B>::type;
 } // namespace details
 
-// Binary operation
-enum class BinaryOperation { add, sub, div };
-
 // Binary function
 template <BinaryOperation kind> struct BinaryFunc {
 
@@ -129,28 +126,7 @@ template <BinaryOperation kind> struct BinaryFunc {
       static auto outputShape(const A &a, const B &b) { return a.shape(); }
 
       static void operator()(const A &left, const B &right, C &result) {
-         if (kind == BinaryOperation::add) {
-            ::ten::kernels::add(left, right, result);
-         } else {
-            size_t n = left.size();
-            using value_type = typename C::value_type;
-            for (size_t i = 0; i < n; i++) {
-               switch (kind) {
-               case BinaryOperation::add:
-                  result[i] = static_cast<value_type>(left[i]) +
-                              static_cast<value_type>(right[i]);
-                  break;
-               case BinaryOperation::sub:
-                  result[i] = static_cast<value_type>(left[i]) -
-                              static_cast<value_type>(right[i]);
-                  break;
-               case BinaryOperation::div:
-                  result[i] = static_cast<value_type>(left[i]) /
-                              static_cast<value_type>(right[i]);
-                  break;
-               }
-            }
-         }
+            ::ten::kernels::binaryOps<kind>(left, right, result);
       }
    };
 };
