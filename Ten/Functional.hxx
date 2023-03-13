@@ -159,18 +159,6 @@ struct MulResult<A, B> {
                            typename A::allocator_type>;
 };
 
-// matrix * vector
-template <MatrixNode A, VectorNode B>
-   requires SameStorageOrder<A, B> && SameStorage<A, B> && SameAllocator<A, B>
-struct MulResult<A, B> {
-   using value_type =
-       std::common_type_t<typename A::value_type, typename B::value_type>;
-   using type =
-       TensorNode<value_type, Shape<A::shape_type::template staticDim<0>()>,
-                  A::storageOrder(), typename A::storage_type,
-                  typename A::allocator_type>;
-};
-
 // scalar * tensor
 template <traits::ScalarNode A, traits::TensorNode B> struct MulResult<A, B> {
    using type = B;
@@ -200,29 +188,6 @@ template <MatrixNode X, MatrixNode Y, MatrixNode Z> struct Mul<X, Y, Z> {
       static C::shape_type outputShape(const A::shape_type &left,
                                        const B::shape_type &right) {
          std::initializer_list<size_type> &&dims = {left.dim(0), right.dim(1)};
-         typename C::shape_type s(std::move(dims));
-         return s;
-      }
-
-      static void operator()(const A &left, const B &right, C &result) {
-         kernels::mul(left, right, result);
-      }
-   };
-};
-
-// matrix * vector
-// TODO remove this, need vectorize
-template <MatrixNode X, VectorNode Y, VectorNode Z> struct Mul<X, Y, Z> {
-
-   template <MatrixNode A, VectorNode B,
-             VectorNode C = typename details::MulResult<A, B>::type>
-   struct Func : ::ten::functional::Func<> {
-      using output_type = C;
-
-      static C::shape_type outputShape(const A::shape_type &left,
-                                       const B::shape_type &right) {
-         // FIXME transposed
-         std::initializer_list<size_type> &&dims = {left.dim(0)};
          typename C::shape_type s(std::move(dims));
          return s;
       }

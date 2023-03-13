@@ -97,8 +97,13 @@ template <typename LeftExpr, typename RightExpr>
 auto operator*(LeftExpr &&left, RightExpr &&right) {
    using L = std::remove_cvref_t<LeftExpr>;
    using R = std::remove_cvref_t<RightExpr>;
-   return ::ten::BinaryExpr<typename L::node_type, typename R::node_type,
-                            ::ten::functional::Mul>(left.node(), right.node());
+   return ::ten::BinaryExpr<typename L::node_type,
+         typename R::node_type,
+         ::ten::functional::Mul<
+            typename L::node_type,
+            typename R::node_type
+         >::template Func
+      >(left.node(), right.node());
 }
 
 template <typename T, typename E>
@@ -1064,14 +1069,14 @@ template <
 
 // iota<T, Rank>(shape, value)
 template <class T, size_type Rank = 1, StorageOrder Order = defaultOrder>
-   requires(std::is_integral_v<T>)
+   requires(std::is_floating_point_v<T>)
 [[nodiscard]] auto ones(const DynamicShape<Rank> &shape, T value = T(0)) {
    using shape_type = ::ten::DynamicShape<Rank>;
    return iota<T, shape_type, Order>(std::forward<Shape>(shape), value);
 }
 
 template <class T, size_type Rank = 1, StorageOrder Order = defaultOrder>
-   requires(std::is_integral_v<T>)
+   requires(std::is_floating_point_v<T>)
 [[nodiscard]] auto iota(std::initializer_list<size_type> &&dims,
                         T value = T(0)) {
    using shape_type = ::ten::DynamicShape<Rank>;

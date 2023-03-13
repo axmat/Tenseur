@@ -34,6 +34,7 @@ enum class SimdBackend { std, unknown };
 #endif
 static SimdBackend simdBackend = TENSEUR_SIMDBACKEND;
 
+// TODO Two simdvecLen default to 8 and 4 for floats, 4 and 2 for doubles
 #ifndef TENSEUR_SIMDVECLEN
 #define TENSEUR_SIMDVECLEN 4
 #endif
