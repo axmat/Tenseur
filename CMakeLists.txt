@@ -10,15 +10,18 @@ include(GNUInstallDirs)
 
 # Compiler options
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -march=native")
 
 # Build shared library
 option(TENSEUR_SHAREDLIB "Build shared Library." OFF)
 
 if (TENSEUR_SHAREDLIB)
-   # FIXME add_library(Tenseur SHARED ${PROJECT_SOURCE_DIR}/Ten/Tensor.cxx)
-	#set_target_properties(Tenseur PROPERTIES POSITION_INDEPENDANT_CODE ON)
-   #target_include_directories(Tenseur PRIVATE ${PROJECT_SOURCE_DIR})
+   add_library(Tenseur SHARED ${PROJECT_SOURCE_DIR}/Ten/Tensor.cxx)
+   set_target_properties(Tenseur PROPERTIES POSITION_INDEPENDANT_CODE ON)
+   target_include_directories(Tenseur PRIVATE ${PROJECT_SOURCE_DIR})
 else()
    add_library(Tenseur INTERFACE)
    target_include_directories(
