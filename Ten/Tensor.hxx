@@ -1064,12 +1064,14 @@ template <
 
 // iota<T, Rank>(shape, value)
 template <class T, size_type Rank = 1, StorageOrder Order = defaultOrder>
+   requires(std::is_integral_v<T>)
 [[nodiscard]] auto ones(const DynamicShape<Rank> &shape, T value = T(0)) {
    using shape_type = ::ten::DynamicShape<Rank>;
    return iota<T, shape_type, Order>(std::forward<Shape>(shape), value);
 }
 
 template <class T, size_type Rank = 1, StorageOrder Order = defaultOrder>
+   requires(std::is_integral_v<T>)
 [[nodiscard]] auto iota(std::initializer_list<size_type> &&dims,
                         T value = T(0)) {
    using shape_type = ::ten::DynamicShape<Rank>;
