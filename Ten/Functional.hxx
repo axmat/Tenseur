@@ -7,8 +7,8 @@
 #include <memory>
 #include <type_traits>
 
-#include <Ten/Types.hxx>
 #include <Ten/Kernels/Host>
+#include <Ten/Types.hxx>
 
 namespace ten::functional {
 // Functions types
@@ -126,7 +126,7 @@ template <BinaryOperation kind> struct BinaryFunc {
       static auto outputShape(const A &a, const B &b) { return a.shape(); }
 
       static void operator()(const A &left, const B &right, C &result) {
-            ::ten::kernels::binaryOps<kind>(left, right, result);
+         ::ten::kernels::binaryOps<kind>(left, right, result);
       }
    };
 };
@@ -182,80 +182,79 @@ template <class A, class B, class C = typename details::MulResult<A, B>::type>
 struct Mul;
 
 // vector * vector
-template <VectorNode A, VectorNode B, VectorNode C>
-struct Mul<A, B, C> : Func<> {
-   using output_type = C;
+template <VectorNode X, VectorNode Y, VectorNode Z> struct Mul<X, Y, Z> {
 
-   static constexpr C::shape_type outputShape(const A::shape_type &left,
-                                              const B::shape_type &right) {
-      std::initializer_list<size_type> &&dims = {
-          std::max(left.dim(0), right.dim(0))};
-      typename C::shape_type s(std::move(dims));
-      return s;
-   }
-
-   static void operator()(const A &left, const B &right, C &result) {
-      size_t n = left.size();
-      using value_type = typename C::value_type;
-      for (size_t i = 0; i < n; i++) {
-         result[i] = static_cast<value_type>(left[i]) *
-                     static_cast<value_type>(right[i]);
-      }
-   }
+   template <VectorNode A, VectorNode B,
+             VectorNode C = typename details::MulResult<A, B>::type>
+   using Func = BinaryFunc<::ten::BinaryOperation::mul>::Func<A, B, C>;
 };
 
 // matrix * matrix
-template <MatrixNode A, MatrixNode B, MatrixNode C>
-struct Mul<A, B, C> : Func<> {
-   using output_type = C;
+template <MatrixNode X, MatrixNode Y, MatrixNode Z> struct Mul<X, Y, Z> {
 
-   static C::shape_type outputShape(const A::shape_type &left,
-                                    const B::shape_type &right) {
-      std::initializer_list<size_type> &&dims = {left.dim(0), right.dim(1)};
-      typename C::shape_type s(std::move(dims));
-      return s;
-   }
+   template <MatrixNode A, MatrixNode B,
+             MatrixNode C = typename details::MulResult<A, B>::type>
+   struct Func : ::ten::functional::Func<> {
+      using output_type = C;
 
-   static void operator()(const A &left, const B &right, C &result) {
-      kernels::mul(left, right, result);
-   }
+      static C::shape_type outputShape(const A::shape_type &left,
+                                       const B::shape_type &right) {
+         std::initializer_list<size_type> &&dims = {left.dim(0), right.dim(1)};
+         typename C::shape_type s(std::move(dims));
+         return s;
+      }
+
+      static void operator()(const A &left, const B &right, C &result) {
+         kernels::mul(left, right, result);
+      }
+   };
 };
 
 // matrix * vector
-template <MatrixNode A, VectorNode B, VectorNode C>
-struct Mul<A, B, C> : Func<> {
-   using output_type = C;
+// TODO remove this, need vectorize
+template <MatrixNode X, VectorNode Y, VectorNode Z> struct Mul<X, Y, Z> {
 
-   static C::shape_type outputShape(const A::shape_type &left,
-                                    const B::shape_type &right) {
-      // FIXME transposed
-      std::initializer_list<size_type> &&dims = {left.dim(0)};
-      typename C::shape_type s(std::move(dims));
-      return s;
-   }
+   template <MatrixNode A, VectorNode B,
+             VectorNode C = typename details::MulResult<A, B>::type>
+   struct Func : ::ten::functional::Func<> {
+      using output_type = C;
 
-   static void operator()(const A &left, const B &right, C &result) {
-      kernels::mul(left, right, result);
-   }
+      static C::shape_type outputShape(const A::shape_type &left,
+                                       const B::shape_type &right) {
+         // FIXME transposed
+         std::initializer_list<size_type> &&dims = {left.dim(0)};
+         typename C::shape_type s(std::move(dims));
+         return s;
+      }
+
+      static void operator()(const A &left, const B &right, C &result) {
+         kernels::mul(left, right, result);
+      }
+   };
 };
 
 // scalar * tensor
-template <traits::ScalarNode A, traits::TensorNode B, traits::TensorNode C>
-struct Mul<A, B, C> : Func<> {
-   using output_type = C;
+template <traits::ScalarNode X, traits::TensorNode Y, traits::TensorNode Z>
+struct Mul<X, Y, Z> {
 
-   static C::shape_type outputShape(const B::shape_type &right) {
-      return right;
-   }
+   template <traits::ScalarNode A, traits::TensorNode B,
+             traits::TensorNode C = typename details::MulResult<A, B>::type>
+   struct Func : ::ten::functional::Func<> {
+      using output_type = C;
 
-   static void operator()(const A &left, const B &right, C &result) {
-      size_t n = result.size();
-      using value_type = typename C::value_type;
-      for (size_t i = 0; i < n; i++) {
-         result[i] = static_cast<value_type>(left.value()) *
-                     static_cast<value_type>(right[i]);
+      static C::shape_type outputShape(const B::shape_type &right) {
+         return right;
       }
-   }
+
+      static void operator()(const A &left, const B &right, C &result) {
+         size_t n = result.size();
+         using value_type = typename C::value_type;
+         for (size_t i = 0; i < n; i++) {
+            result[i] = static_cast<value_type>(left.value()) *
+                        static_cast<value_type>(right[i]);
+         }
+      }
+   };
 };
 
 namespace details {
