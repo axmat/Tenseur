@@ -34,7 +34,16 @@ int main(int argc, char **argv) {
       bench.run("Gemm2", [&] { MatrixXf d = a * b; });
 
       bench.run("Sum", [&] { c = a + b; });
-      bench.run("Sum2", [&] { MatrixXf d = a * b; });
+      bench.run("Sum2", [&] { MatrixXf d = a + b; });
+
+      bench.run("Sub", [&] { c = a - b; });
+      bench.run("Sub2", [&] { MatrixXf d = a - b; });
+
+      bench.run("Div", [&] { c = a.array() / b.array(); });
+      bench.run("Div2", [&] { MatrixXf d = a.array() / b.array(); });
+
+      bench.run("Mul", [&] { c = a.array() * b.array(); });
+      bench.run("Mul2", [&] { MatrixXf d = a.array() * b.array(); });
    }
 
    std::ofstream file(fileName + ".csv");

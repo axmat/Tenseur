@@ -29,6 +29,7 @@ int main(int argc, char **argv) {
       });
    }
 
+   // sum
    for (auto N : sizes) {
       auto a = iota<Matrix<float>>({N, N});
       auto b = iota<Matrix<float>>({N, N});
@@ -36,6 +37,42 @@ int main(int argc, char **argv) {
       bench.run("Sum", [&] { c = a + b; });
       bench.run("Sum2", [&] {
          Matrix<float> d = a + b;
+         ankerl::nanobench::doNotOptimizeAway(d);
+      });
+   }
+
+   // sub
+   for (auto N : sizes) {
+      auto a = iota<Matrix<float>>({N, N});
+      auto b = iota<Matrix<float>>({N, N});
+      auto c = zeros<Matrix<float>>({N, N});
+      bench.run("Sub", [&] { c = a - b; });
+      bench.run("Sub2", [&] {
+         Matrix<float> d = a - b;
+         ankerl::nanobench::doNotOptimizeAway(d);
+      });
+   }
+
+   // div
+   for (auto N : sizes) {
+      auto a = iota<Matrix<float>>({N, N});
+      auto b = iota<Matrix<float>>({N, N});
+      auto c = zeros<Matrix<float>>({N, N});
+      bench.run("Div", [&] { c = a / b; });
+      bench.run("Div2", [&] {
+         Matrix<float> d = a / b;
+         ankerl::nanobench::doNotOptimizeAway(d);
+      });
+   }
+
+   // mul
+   for (auto N : sizes) {
+      auto a = iota<Vector<float>>({N * N});
+      auto b = iota<Vector<float>>({N * N});
+      auto c = zeros<Vector<float>>({N * N});
+      bench.run("Mul", [&] { c = a * b; });
+      bench.run("Mul2", [&] {
+         Vector<float> d = a * b;
          ankerl::nanobench::doNotOptimizeAway(d);
       });
    }
