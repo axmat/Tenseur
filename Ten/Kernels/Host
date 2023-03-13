@@ -3,6 +3,6 @@
 
 #include <Ten/Kernels/BlasAPI.hxx>
 #include <Ten/Kernels/Mul.hxx>
-#include <Ten/Kernels/Add.hxx>
+#include <Ten/Kernels/BinaryOps.hxx>
 
 #endif

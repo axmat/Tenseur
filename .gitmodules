@@ -1,0 +1,3 @@
+[submodule "cppyy"]
+	path = cppyy
+	url = https://github.com/wlav/cppyy.git

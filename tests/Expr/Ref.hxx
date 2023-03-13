@@ -8,7 +8,7 @@ namespace ten::tests {
 template <class A, class B>
    requires std::same_as<A, B> && ::ten::isDenseVector<A>::value
 auto add(const A &a, const B &b) {
-   assert(a.shape() == b.shape() && "Same shape");
+   assert(a.shape() == b.shape() && "Expected equal shapes");
    A c(a.shape());
    for (size_t i = 0; i < a.size(); i++) {
       c[i] = a[i] + b[i];
@@ -18,10 +18,33 @@ auto add(const A &a, const B &b) {
 
 template <class A, class B>
    requires std::same_as<A, B> && ::ten::isDenseVector<A>::value
-auto mul(const A &a, const B &b) {
+auto sub(const A &a, const B &b) {
+   assert(a.shape() == b.shape() && "Expected equal shapes");
    A c(a.shape());
    for (size_t i = 0; i < a.size(); i++) {
-      c[i] = a[i] + b[i];
+      c[i] = a[i] - b[i];
+   }
+   return c;
+}
+
+template <class A, class B>
+   requires std::same_as<A, B> && ::ten::isDenseVector<A>::value
+auto mul(const A &a, const B &b) {
+   assert(a.shape() == b.shape() && "Expected equal shapes");
+   A c(a.shape());
+   for (size_t i = 0; i < a.size(); i++) {
+      c[i] = a[i] * b[i];
+   }
+   return c;
+}
+
+template <class A, class B>
+   requires std::same_as<A, B> && ::ten::isDenseVector<A>::value
+auto div(const A &a, const B &b) {
+   assert(a.shape() == b.shape() && "Expected equal shapes");
+   A c(a.shape());
+   for (size_t i = 0; i < a.size(); i++) {
+      c[i] = a[i] / b[i];
    }
    return c;
 }

@@ -45,21 +45,19 @@ auto operator+(LeftExpr &&left, RightExpr &&right) {
    using R = std::remove_cvref_t<RightExpr>;
    return ::ten::BinaryExpr<
        typename L::node_type, typename R::node_type,
-       ::ten::functional::BinaryFunc<functional::BinaryOperation::add>::Func>(
+       ::ten::functional::BinaryFunc<::ten::BinaryOperation::add>::Func>(
        left.node(), right.node());
 }
 
 template <typename T, typename E>
-   requires ::ten::isExpr<std::remove_cvref_t<E>>
-&& std::is_floating_point_v<T>
+   requires ::ten::isExpr<std::remove_cvref_t<E>> && std::is_floating_point_v<T>
 auto operator+(T &&scalar, E &&expr) {
    using R = std::remove_cvref_t<E>;
    return Scalar<T>(scalar) + std::forward<R>(expr);
 }
 
 template <typename E, typename T>
-   requires ::ten::isExpr<std::remove_cvref_t<E>>
-&& std::is_floating_point_v<T>
+   requires ::ten::isExpr<std::remove_cvref_t<E>> && std::is_floating_point_v<T>
 auto operator+(E &&expr, T &&scalar) {
    using R = std::remove_cvref_t<E>;
    return std::forward<R>(expr) + Scalar<T>(scalar);
@@ -74,7 +72,7 @@ auto operator-(LeftExpr &&left, RightExpr &&right) {
    using R = std::remove_cvref_t<RightExpr>;
    return ::ten::BinaryExpr<
        typename L::node_type, typename R::node_type,
-       ::ten::functional::BinaryFunc<functional::BinaryOperation::sub>::Func>(
+       ::ten::functional::BinaryFunc<::ten::BinaryOperation::sub>::Func>(
        left.node(), right.node());
 }
 
@@ -126,7 +124,7 @@ auto operator/(LeftExpr &&left, RightExpr &&right) {
    using R = std::remove_cvref_t<RightExpr>;
    return ::ten::BinaryExpr<
        typename L::node_type, typename R::node_type,
-       ::ten::functional::BinaryFunc<functional::BinaryOperation::div>::Func>(
+       ::ten::functional::BinaryFunc<::ten::BinaryOperation::div>::Func>(
        left.node(), right.node());
 }
 
@@ -1065,13 +1063,13 @@ template <
 }
 
 // iota<T, Rank>(shape, value)
-template <class T, size_type Rank, StorageOrder Order = defaultOrder>
+template <class T, size_type Rank = 1, StorageOrder Order = defaultOrder>
 [[nodiscard]] auto ones(const DynamicShape<Rank> &shape, T value = T(0)) {
    using shape_type = ::ten::DynamicShape<Rank>;
    return iota<T, shape_type, Order>(std::forward<Shape>(shape), value);
 }
 
-template <class T, size_type Rank, StorageOrder Order = defaultOrder>
+template <class T, size_type Rank = 1, StorageOrder Order = defaultOrder>
 [[nodiscard]] auto iota(std::initializer_list<size_type> &&dims,
                         T value = T(0)) {
    using shape_type = ::ten::DynamicShape<Rank>;

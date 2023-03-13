@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "Add.hxx"
+#include "BinaryOps.hxx"
 
 int main(int argc, char **argv) {
 
